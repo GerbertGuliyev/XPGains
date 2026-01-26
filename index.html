@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>XPGains - Train Your Skills</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="app">
+    <!-- Fixed Top Navigation - Centered, new order -->
+    <nav id="top-nav">
+      <img src="assets/Logo/XPGains_Logo.png" alt="XPGains" class="nav-logo">
+      <div class="nav-tabs">
+        <button class="nav-tab active" data-tab="muscle-map">Muscle Map</button>
+        <button class="nav-tab" data-tab="stats-card">Stats Card</button>
+        <button class="nav-tab" data-tab="log">Log</button>
+        <button class="nav-tab" data-tab="challenges">Challenges</button>
+        <button class="nav-tab" data-tab="settings">Settings</button>
+      </div>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main id="content">
+      <!-- Muscle Map Screen (Default) -->
+      <section id="muscle-map-screen" class="screen active">
+        <div class="screen-header">
+          <h2>Muscle Map</h2>
+          <p class="screen-subtitle">Select a muscle to train</p>
+        </div>
+        <div id="muscle-map-container" class="muscle-map-container">
+          <!-- SVG will be rendered here -->
+        </div>
+      </section>
+
+      <!-- Stats Card Screen (formerly Skills) -->
+      <section id="stats-card-screen" class="screen">
+        <div class="screen-header">
+          <h2>Stats Card</h2>
+        </div>
+        <div class="stats-grid-wrapper">
+          <div id="stats-grid" class="stats-grid">
+            <!-- Skills tiles will be rendered here by JS -->
+          </div>
+        </div>
+      </section>
+
+      <!-- Log Screen -->
+      <section id="log-screen" class="screen">
+        <div class="screen-header">
+          <h2>Training Log</h2>
+        </div>
+        <div id="log-entries" class="log-container">
+          <p class="empty-state">No training logged yet. Start training from the Muscle Map!</p>
+        </div>
+      </section>
+
+      <!-- Challenges Screen -->
+      <section id="challenges-screen" class="screen">
+        <div class="screen-header">
+          <h2>Challenges</h2>
+        </div>
+        <div id="challenges-content" class="challenges-container">
+          <!-- Challenges content rendered by JS -->
+        </div>
+      </section>
+
+      <!-- Settings Screen -->
+      <section id="settings-screen" class="screen">
+        <div class="screen-header">
+          <h2>Settings</h2>
+        </div>
+        <div id="settings-content" class="settings-container">
+          <!-- Settings content rendered by JS -->
+        </div>
+      </section>
+
+      <!-- Skill Detail Modal -->
+      <div id="skill-detail-modal" class="modal">
+        <div class="modal-content">
+          <button class="modal-close">&times;</button>
+          <div id="skill-detail-content">
+            <!-- Skill detail will be rendered here -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Training Flow Modal -->
+      <div id="training-modal" class="modal">
+        <div class="modal-content training-modal-content">
+          <button class="modal-close">&times;</button>
+          <div id="training-flow-content">
+            <!-- Training steps will be rendered here -->
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- XP Gain Toast -->
+    <div id="xp-toast" class="xp-toast">
+      <span class="xp-toast-text">+0 XP</span>
+    </div>
+  </div>
+
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
