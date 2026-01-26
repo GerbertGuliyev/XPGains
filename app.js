@@ -304,7 +304,7 @@ const SkillDetail = {
             ${(xpNeeded - xpIntoLevel).toLocaleString()} XP to level ${level + 1}
           </div>
         ` : '<div class="skill-detail-xp-text">MAX LEVEL</div>'}
-        <button class="xp-tick-btn skill-detail-train-btn" id="train-skill-btn">Train ${skill.name}</button>
+        <button class="xp-tick-btn skill-detail-train-btn" id="train-skill-btn">Train</button>
       </div>
     `;
 
