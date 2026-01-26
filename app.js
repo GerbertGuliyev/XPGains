@@ -788,8 +788,8 @@ const TrainingFlow = {
 
   showXpToast(xp, neglected = false) {
     const toast = document.getElementById('xp-toast');
-    const text = neglected ? `+${xp} XP (Neglected Bonus!)` : `+${xp} XP`;
-    toast.querySelector('.xp-toast-text').textContent = text;
+    // Always show plain XP text - neglected bonus is awarded silently
+    toast.querySelector('.xp-toast-text').textContent = `+${xp} XP`;
     toast.classList.add('show');
 
     setTimeout(() => {

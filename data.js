@@ -362,7 +362,7 @@ const XP_CONFIG = {
   diminishingMultipliers: [1.0, 0.85, 0.7, 0.5, 0.3],
 
   // Neglected muscle bonus
-  neglectedDays: 10,      // Days without training to be "neglected"
+  neglectedDays: 7,       // Days without training to be "neglected"
   neglectedBonus: 0.10    // 10% bonus XP
 };
 
@@ -502,19 +502,30 @@ function calculateXpGain(reps, weight, exerciseId, skillLevel, recentSets, isNeg
 }
 
 /**
- * Check if a muscle skill is "neglected" (no training in X days)
+ * Check if a muscle skill is "neglected" (trained before but not in X days)
  * @param {string} skillId - The skill to check
  * @param {Array} logEntries - All log entries
- * @returns {boolean} True if neglected
+ * @returns {boolean} True if neglected (trained before but not recently)
  */
 function isSkillNeglected(skillId, logEntries) {
   const cutoffTime = Date.now() - (XP_CONFIG.neglectedDays * 24 * 60 * 60 * 1000);
 
+  // First check if this skill has EVER been trained
+  const hasEverTrained = logEntries.some(entry => entry.skillId === skillId);
+
+  // If never trained before, not neglected (no bonus)
+  if (!hasEverTrained) {
+    return false;
+  }
+
+  // Check if trained recently (within neglectedDays)
   for (const entry of logEntries) {
     if (entry.skillId === skillId && entry.timestamp > cutoffTime) {
       return false;
     }
   }
+
+  // Trained before but not recently = neglected
   return true;
 }
 
