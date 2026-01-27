@@ -32,7 +32,17 @@ const AppState = {
   },
 
   // Active challenge
-  challenge: null
+  challenge: null,
+
+  // Last used weight/reps per exercise { exerciseId: { weight, reps, updatedAt } }
+  lastExerciseInputs: {},
+
+  // Friends system
+  friends: {
+    favorites: {},        // { name: true } - starred friends
+    sharedRecords: {},    // { name: { name, updatedAt, skills, appVersion } }
+    mySharedName: null    // The name user has shared under
+  }
 };
 
 // ============================================
@@ -44,7 +54,9 @@ const Storage = {
     favorites: 'xpgains_favorites',
     logEntries: 'xpgains_log_entries',
     settings: 'xpgains_settings',
-    challenge: 'xpgains_challenge'
+    challenge: 'xpgains_challenge',
+    lastExerciseInputs: 'xpgains_last_exercise_inputs',
+    friends: 'xpgains_friends'
   },
 
   save() {
@@ -54,6 +66,8 @@ const Storage = {
       localStorage.setItem(this.keys.logEntries, JSON.stringify(AppState.logEntries));
       localStorage.setItem(this.keys.settings, JSON.stringify(AppState.settings));
       localStorage.setItem(this.keys.challenge, JSON.stringify(AppState.challenge));
+      localStorage.setItem(this.keys.lastExerciseInputs, JSON.stringify(AppState.lastExerciseInputs));
+      localStorage.setItem(this.keys.friends, JSON.stringify(AppState.friends));
     } catch (e) {
       console.error('Failed to save to localStorage:', e);
     }
@@ -66,12 +80,16 @@ const Storage = {
       const logEntries = localStorage.getItem(this.keys.logEntries);
       const settings = localStorage.getItem(this.keys.settings);
       const challenge = localStorage.getItem(this.keys.challenge);
+      const lastExerciseInputs = localStorage.getItem(this.keys.lastExerciseInputs);
+      const friends = localStorage.getItem(this.keys.friends);
 
       if (skillXp) AppState.skillXp = JSON.parse(skillXp);
       if (favorites) AppState.favorites = JSON.parse(favorites);
       if (logEntries) AppState.logEntries = JSON.parse(logEntries);
       if (settings) AppState.settings = JSON.parse(settings);
       if (challenge) AppState.challenge = JSON.parse(challenge);
+      if (lastExerciseInputs) AppState.lastExerciseInputs = JSON.parse(lastExerciseInputs);
+      if (friends) AppState.friends = JSON.parse(friends);
 
       // Initialize any missing skills with 0 XP
       SKILLS.forEach(skill => {
@@ -79,6 +97,10 @@ const Storage = {
           AppState.skillXp[skill.id] = 0;
         }
       });
+
+      // Initialize friends structure if missing
+      if (!AppState.friends.favorites) AppState.friends.favorites = {};
+      if (!AppState.friends.sharedRecords) AppState.friends.sharedRecords = {};
     } catch (e) {
       console.error('Failed to load from localStorage:', e);
     }
@@ -91,6 +113,8 @@ const Storage = {
       localStorage.removeItem(this.keys.logEntries);
       localStorage.removeItem(this.keys.settings);
       localStorage.removeItem(this.keys.challenge);
+      localStorage.removeItem(this.keys.lastExerciseInputs);
+      localStorage.removeItem(this.keys.friends);
       location.reload();
     }
   }
@@ -136,6 +160,59 @@ const Units = {
 };
 
 // ============================================
+// XP BAR COLOR INTERPOLATION
+// ============================================
+const XpBarColors = {
+  // Color stops: 0% = red, 33% = orange, 66% = yellow, 100% = green
+  stops: [
+    { pct: 0,   color: { r: 255, g: 59, b: 48 } },   // #ff3b30 red
+    { pct: 33,  color: { r: 255, g: 149, b: 0 } },   // #ff9500 orange
+    { pct: 66,  color: { r: 255, g: 204, b: 0 } },   // #ffcc00 yellow
+    { pct: 100, color: { r: 52, g: 199, b: 89 } }    // #34c759 green
+  ],
+
+  /**
+   * Get interpolated color for a given percentage
+   * @param {number} pct - Progress percentage (0-100)
+   * @returns {string} RGB color string
+   */
+  getColor(pct) {
+    pct = Math.max(0, Math.min(100, pct));
+
+    // Find the two stops we're between
+    let lower = this.stops[0];
+    let upper = this.stops[this.stops.length - 1];
+
+    for (let i = 0; i < this.stops.length - 1; i++) {
+      if (pct >= this.stops[i].pct && pct <= this.stops[i + 1].pct) {
+        lower = this.stops[i];
+        upper = this.stops[i + 1];
+        break;
+      }
+    }
+
+    // Calculate position between the two stops
+    const range = upper.pct - lower.pct;
+    const rangePct = range === 0 ? 0 : (pct - lower.pct) / range;
+
+    // Interpolate RGB values
+    const r = Math.round(lower.color.r + rangePct * (upper.color.r - lower.color.r));
+    const g = Math.round(lower.color.g + rangePct * (upper.color.g - lower.color.g));
+    const b = Math.round(lower.color.b + rangePct * (upper.color.b - lower.color.b));
+
+    return `rgb(${r}, ${g}, ${b})`;
+  },
+
+  /**
+   * Get CSS gradient for the full bar (for background styling)
+   * @returns {string} CSS linear-gradient
+   */
+  getGradient() {
+    return 'linear-gradient(90deg, #ff3b30 0%, #ff9500 33%, #ffcc00 66%, #34c759 100%)';
+  }
+};
+
+// ============================================
 // NAVIGATION
 // ============================================
 const Navigation = {
@@ -173,6 +250,8 @@ const Navigation = {
       MuscleMap.render();
     } else if (tabName === 'challenges') {
       ChallengesScreen.render();
+    } else if (tabName === 'friends') {
+      FriendsScreen.render();
     } else if (tabName === 'settings') {
       SettingsScreen.render();
     }
@@ -420,10 +499,43 @@ const LogScreen = {
       <div class="log-entry-right">
         <div class="log-entry-xp">+${entry.xpAwarded}</div>
         <div class="log-entry-skill-label">${skill ? skill.name : ''}</div>
+        <button class="log-undo-btn" data-entry-id="${entry.id}">Undo</button>
       </div>
     `;
 
+    // Add undo click handler
+    el.querySelector('.log-undo-btn').addEventListener('click', (e) => {
+      e.stopPropagation();
+      this.undoEntry(entry);
+    });
+
     return el;
+  },
+
+  /**
+   * Undo a log entry - subtract XP and remove from log
+   */
+  undoEntry(entry) {
+    if (!confirm(`Undo this set? This will subtract ${entry.xpAwarded} XP from ${getSkillById(entry.skillId)?.name || 'Unknown'}.`)) {
+      return;
+    }
+
+    // Subtract XP from the skill
+    const currentXp = AppState.skillXp[entry.skillId] || 0;
+    AppState.skillXp[entry.skillId] = Math.max(0, currentXp - entry.xpAwarded);
+
+    // Remove the log entry
+    const index = AppState.logEntries.findIndex(e => e.id === entry.id);
+    if (index !== -1) {
+      AppState.logEntries.splice(index, 1);
+    }
+
+    // Save and re-render
+    Storage.save();
+    this.render();
+
+    // Also refresh Stats Card
+    StatsCard.render();
   }
 };
 
@@ -642,6 +754,23 @@ const TrainingFlow = {
     // Get weight config converted for current unit
     const weightConfig = Units.convertConfig(exercise.weight);
 
+    // Load last used values for this exercise, or use defaults
+    const lastInputs = AppState.lastExerciseInputs[exercise.id];
+    let defaultWeight = weightConfig.default;
+    let defaultReps = 10;
+
+    if (lastInputs) {
+      // Convert stored weight (in KG) to display unit
+      defaultWeight = Units.display(lastInputs.weight);
+      defaultReps = lastInputs.reps;
+    }
+
+    // Calculate current XP progress for the skill
+    const currentXp = AppState.skillXp[skill.id] || 0;
+    const currentLevel = levelFromXp(currentXp);
+    const progress = progressToNextLevel(currentXp);
+    const progressColor = XpBarColors.getColor(progress);
+
     const content = document.getElementById('training-flow-content');
     content.innerHTML = `
       <button class="back-btn" id="back-to-exercises">&larr; Back</button>
@@ -659,21 +788,33 @@ const TrainingFlow = {
           <div class="input-row">
             <input type="range" class="input-slider" id="weight-slider"
                    min="${weightConfig.min}" max="${weightConfig.max}"
-                   value="${weightConfig.default}" step="${weightConfig.step}">
+                   value="${defaultWeight}" step="${weightConfig.step}">
             <input type="number" class="input-number" id="weight-input"
-                   value="${weightConfig.default}" min="0" max="${weightConfig.max * 2}">
+                   value="${defaultWeight}" min="0" max="${weightConfig.max * 2}">
           </div>
         </div>
 
         <div class="input-group">
           <label class="input-label">Reps</label>
           <div class="input-row">
-            <input type="range" class="input-slider" id="reps-slider" min="1" max="30" value="10">
-            <input type="number" class="input-number" id="reps-input" value="10" min="1" max="100">
+            <input type="range" class="input-slider" id="reps-slider" min="1" max="30" value="${defaultReps}">
+            <input type="number" class="input-number" id="reps-input" value="${defaultReps}" min="1" max="100">
           </div>
         </div>
 
+        <p class="exercise-helper-text">Complete a set, then press XP Tick to log it.</p>
+
         <button class="xp-tick-btn" id="xp-tick-btn">XP Tick</button>
+
+        <div class="exercise-xp-bar">
+          <div class="exercise-xp-bar-label">
+            <span>${skill.name} Lv. ${currentLevel}</span>
+            <span>${progress}%</span>
+          </div>
+          <div class="exercise-xp-bar-track">
+            <div class="exercise-xp-bar-fill" id="exercise-xp-fill" style="width: ${progress}%; background: ${progressColor};"></div>
+          </div>
+        </div>
       </div>
     `;
 
@@ -766,6 +907,13 @@ const TrainingFlow = {
       AppState.recentSets = AppState.recentSets.slice(-50);
     }
 
+    // Save last used inputs for this exercise
+    AppState.lastExerciseInputs[exerciseId] = {
+      weight: weight, // Stored in KG
+      reps: reps,
+      updatedAt: new Date().toISOString()
+    };
+
     // Update challenge progress if active
     if (AppState.challenge) {
       ChallengesScreen.updateProgress(skillId, exerciseId);
@@ -777,12 +925,40 @@ const TrainingFlow = {
     // Show XP toast
     this.showXpToast(xpGained, neglected);
 
+    // Update the XP bar in exercise detail immediately
+    this.updateExerciseXpBar(skillId);
+
+    // Refresh Stats Card if visible (or prepare for when user returns)
+    StatsCard.render();
+
     // Check for level up
     const newLevel = levelFromXp(AppState.skillXp[skillId]);
     if (newLevel > currentLevel) {
       setTimeout(() => {
         alert(`Level up! ${getSkillById(skillId).name} is now level ${newLevel}!`);
       }, 500);
+    }
+  },
+
+  /**
+   * Update the XP bar in the exercise detail view
+   */
+  updateExerciseXpBar(skillId) {
+    const skill = getSkillById(skillId);
+    const currentXp = AppState.skillXp[skillId] || 0;
+    const currentLevel = levelFromXp(currentXp);
+    const progress = progressToNextLevel(currentXp);
+    const progressColor = XpBarColors.getColor(progress);
+
+    const fill = document.getElementById('exercise-xp-fill');
+    const label = document.querySelector('.exercise-xp-bar-label');
+
+    if (fill) {
+      fill.style.width = `${progress}%`;
+      fill.style.background = progressColor;
+    }
+    if (label) {
+      label.innerHTML = `<span>${skill.name} Lv. ${currentLevel}</span><span>${progress}%</span>`;
     }
   },
 
@@ -1025,6 +1201,14 @@ const SettingsScreen = {
       </div>
 
       <div class="settings-section">
+        <h3 class="settings-title">Calibration</h3>
+        <div class="settings-option">
+          <button class="back-btn calibrate-btn" id="calibrate-skills">Calibrate Skills</button>
+          <p class="settings-info">Manually set skill levels if you're migrating from another tracker.</p>
+        </div>
+      </div>
+
+      <div class="settings-section">
         <h3 class="settings-title">Data</h3>
         <div class="settings-option">
           <button class="back-btn danger-btn" id="reset-data">Reset All Data</button>
@@ -1034,7 +1218,7 @@ const SettingsScreen = {
 
       <div class="settings-section">
         <h3 class="settings-title">About</h3>
-        <p class="settings-info">XPGains v0.2 - Train your skills!</p>
+        <p class="settings-info">XPGains v0.3 - Train your skills!</p>
       </div>
     `;
 
@@ -1049,10 +1233,418 @@ const SettingsScreen = {
       });
     });
 
+    // Calibrate skills button
+    container.querySelector('#calibrate-skills').addEventListener('click', () => {
+      CalibrationModal.show();
+    });
+
     // Reset button
     container.querySelector('#reset-data').addEventListener('click', () => {
       Storage.reset();
     });
+  }
+};
+
+// ============================================
+// CALIBRATION MODAL
+// ============================================
+const CalibrationModal = {
+  show() {
+    const content = document.getElementById('calibration-content');
+
+    // Build skill rows
+    let skillRowsHtml = '';
+    SKILLS.forEach(skill => {
+      const currentXp = AppState.skillXp[skill.id] || 0;
+      const currentLevel = levelFromXp(currentXp);
+
+      skillRowsHtml += `
+        <div class="calibration-row">
+          <div class="calibration-skill-info">
+            ${StatsCard.getSkillIcon(skill.id, 32)}
+            <span class="calibration-skill-name">${skill.name}</span>
+          </div>
+          <input type="number" class="calibration-level-input"
+                 data-skill-id="${skill.id}"
+                 value="${currentLevel}"
+                 min="1" max="99">
+        </div>
+      `;
+    });
+
+    content.innerHTML = `
+      <div class="calibration-modal">
+        <h3 class="calibration-title">Calibrate Skills</h3>
+        <p class="calibration-desc">Set skill levels manually. XP will be set to the minimum for each level.</p>
+
+        <div class="calibration-skills-list">
+          ${skillRowsHtml}
+        </div>
+
+        <div class="calibration-actions">
+          <button class="back-btn" id="calibration-cancel">Cancel</button>
+          <button class="xp-tick-btn calibration-save-btn" id="calibration-save">Save</button>
+        </div>
+      </div>
+    `;
+
+    // Cancel button
+    content.querySelector('#calibration-cancel').addEventListener('click', () => {
+      Modal.hide('calibration-modal');
+    });
+
+    // Save button
+    content.querySelector('#calibration-save').addEventListener('click', () => {
+      this.save();
+    });
+
+    // Clamp inputs on change
+    content.querySelectorAll('.calibration-level-input').forEach(input => {
+      input.addEventListener('change', () => {
+        let val = parseInt(input.value) || 1;
+        val = Math.max(1, Math.min(99, val));
+        input.value = val;
+      });
+    });
+
+    Modal.show('calibration-modal');
+  },
+
+  save() {
+    const inputs = document.querySelectorAll('.calibration-level-input');
+
+    inputs.forEach(input => {
+      const skillId = input.dataset.skillId;
+      let level = parseInt(input.value) || 1;
+      level = Math.max(1, Math.min(99, level));
+
+      // Set XP to the minimum for that level
+      AppState.skillXp[skillId] = xpForLevel(level);
+    });
+
+    // Save and refresh
+    Storage.save();
+    StatsCard.render();
+    Modal.hide('calibration-modal');
+  }
+};
+
+// ============================================
+// FRIENDS SCREEN
+// ============================================
+const FriendsScreen = {
+  currentPage: 0,
+  itemsPerPage: 25,
+  searchQuery: '',
+
+  render() {
+    const container = document.getElementById('friends-content');
+
+    container.innerHTML = `
+      <div class="friends-top-area">
+        <div class="friends-search-row">
+          <input type="text" class="friends-search-input" id="friends-search"
+                 placeholder="Search by name..." value="${this.searchQuery}">
+          <button class="xp-tick-btn friends-share-btn" id="share-progress">Share Progress</button>
+        </div>
+      </div>
+
+      <div class="friends-list-area" id="friends-list">
+        <!-- Friends list rendered here -->
+      </div>
+
+      <div class="friends-pagination" id="friends-pagination">
+        <!-- Pagination controls -->
+      </div>
+    `;
+
+    // Search input handler
+    container.querySelector('#friends-search').addEventListener('input', (e) => {
+      this.searchQuery = e.target.value.trim().toLowerCase();
+      this.currentPage = 0;
+      this.renderList();
+    });
+
+    // Share progress button
+    container.querySelector('#share-progress').addEventListener('click', () => {
+      this.showShareDialog();
+    });
+
+    this.renderList();
+  },
+
+  renderList() {
+    const listContainer = document.getElementById('friends-list');
+    const paginationContainer = document.getElementById('friends-pagination');
+
+    // Get all friend records
+    let friends = Object.values(AppState.friends.sharedRecords);
+
+    // Filter by search
+    if (this.searchQuery) {
+      friends = friends.filter(f =>
+        f.name.toLowerCase().includes(this.searchQuery)
+      );
+    }
+
+    // Sort: favorites first (in green), then alphabetically
+    friends.sort((a, b) => {
+      const aFav = AppState.friends.favorites[a.name] ? 1 : 0;
+      const bFav = AppState.friends.favorites[b.name] ? 1 : 0;
+      if (aFav !== bFav) return bFav - aFav;
+      return a.name.localeCompare(b.name);
+    });
+
+    // Pagination
+    const totalPages = Math.ceil(friends.length / this.itemsPerPage);
+    const startIdx = this.currentPage * this.itemsPerPage;
+    const endIdx = startIdx + this.itemsPerPage;
+    const pageFriends = friends.slice(startIdx, endIdx);
+
+    if (friends.length === 0) {
+      listContainer.innerHTML = `
+        <div class="friends-empty-state">
+          <p>No friends found.</p>
+          <p>Share your progress or add friends to get started!</p>
+        </div>
+      `;
+      paginationContainer.innerHTML = '';
+      return;
+    }
+
+    // Render friend rows
+    let listHtml = '';
+    pageFriends.forEach(friend => {
+      const isFavorite = AppState.friends.favorites[friend.name];
+      const totalLevel = this.calculateTotalLevel(friend.skills);
+      const updatedDate = friend.updatedAt
+        ? new Date(friend.updatedAt).toLocaleDateString()
+        : 'Unknown';
+
+      listHtml += `
+        <div class="friend-row ${isFavorite ? 'favorite' : ''}" data-name="${friend.name}">
+          <button class="friend-star-btn ${isFavorite ? 'active' : ''}" data-name="${friend.name}">
+            ${isFavorite ? '&#x2605;' : '&#x2606;'}
+          </button>
+          <div class="friend-info" data-name="${friend.name}">
+            <span class="friend-name">${friend.name}</span>
+            <span class="friend-meta">Total Lv. ${totalLevel} &bull; ${updatedDate}</span>
+          </div>
+        </div>
+      `;
+    });
+    listContainer.innerHTML = listHtml;
+
+    // Add click handlers for star buttons
+    listContainer.querySelectorAll('.friend-star-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const name = btn.dataset.name;
+        this.toggleFavorite(name);
+      });
+    });
+
+    // Add click handlers for viewing friend
+    listContainer.querySelectorAll('.friend-info').forEach(info => {
+      info.addEventListener('click', () => {
+        const name = info.dataset.name;
+        this.viewFriend(name);
+      });
+    });
+
+    // Render pagination
+    if (totalPages > 1) {
+      paginationContainer.innerHTML = `
+        <button class="back-btn" id="friends-prev" ${this.currentPage === 0 ? 'disabled' : ''}>Prev</button>
+        <span class="friends-page-info">Page ${this.currentPage + 1} of ${totalPages}</span>
+        <button class="back-btn" id="friends-next" ${this.currentPage >= totalPages - 1 ? 'disabled' : ''}>Next</button>
+      `;
+
+      paginationContainer.querySelector('#friends-prev')?.addEventListener('click', () => {
+        if (this.currentPage > 0) {
+          this.currentPage--;
+          this.renderList();
+        }
+      });
+
+      paginationContainer.querySelector('#friends-next')?.addEventListener('click', () => {
+        if (this.currentPage < totalPages - 1) {
+          this.currentPage++;
+          this.renderList();
+        }
+      });
+    } else {
+      paginationContainer.innerHTML = '';
+    }
+  },
+
+  toggleFavorite(name) {
+    if (AppState.friends.favorites[name]) {
+      delete AppState.friends.favorites[name];
+    } else {
+      AppState.friends.favorites[name] = true;
+    }
+    Storage.save();
+    this.renderList();
+  },
+
+  calculateTotalLevel(skills) {
+    if (!skills) return 14; // Default level 1 for all
+    let total = 0;
+    SKILLS.forEach(skill => {
+      if (skills[skill.id]) {
+        total += skills[skill.id].level || 1;
+      } else {
+        total += 1;
+      }
+    });
+    return total;
+  },
+
+  showShareDialog() {
+    const currentName = AppState.friends.mySharedName || '';
+    const name = prompt('Enter a name to share your progress under:', currentName);
+
+    if (name === null) return; // Cancelled
+    if (!name.trim()) {
+      alert('Please enter a valid name.');
+      return;
+    }
+
+    const sanitizedName = name.trim();
+
+    // Build the shared record
+    const record = {
+      name: sanitizedName,
+      updatedAt: new Date().toISOString(),
+      skills: {},
+      appVersion: '0.3'
+    };
+
+    SKILLS.forEach(skill => {
+      const xp = AppState.skillXp[skill.id] || 0;
+      const level = levelFromXp(xp);
+      record.skills[skill.id] = { level, xp };
+    });
+
+    // Save to local shared records (this user's own record)
+    AppState.friends.sharedRecords[sanitizedName] = record;
+    AppState.friends.mySharedName = sanitizedName;
+    Storage.save();
+
+    // Generate JSON for potential Git sync
+    this.generateExportJson(record);
+
+    alert(`Your progress has been saved under "${sanitizedName}".`);
+    this.renderList();
+  },
+
+  generateExportJson(record) {
+    // This creates a JSON blob that could be pushed to Git
+    // For now, we'll store it and log it for future integration
+    const json = JSON.stringify(record, null, 2);
+    console.log('Shared record JSON (for Git sync):', json);
+
+    // Store in localStorage for potential manual export
+    try {
+      localStorage.setItem('xpgains_my_shared_json', json);
+    } catch (e) {
+      console.error('Failed to store export JSON:', e);
+    }
+  },
+
+  viewFriend(name) {
+    const friend = AppState.friends.sharedRecords[name];
+    if (!friend) {
+      alert('Friend data not found.');
+      return;
+    }
+
+    const content = document.getElementById('friend-view-content');
+
+    // Build stats grid using friend's data
+    let gridHtml = '';
+    SKILLS.forEach(skill => {
+      const skillData = friend.skills[skill.id] || { level: 1, xp: 0 };
+      const icon = StatsCard.getSkillIcon(skill.id, 64);
+
+      gridHtml += `
+        <div class="skill-tile">
+          <div class="tile-content">
+            <div class="tile-left">
+              <div class="tile-icon">${icon}</div>
+              <span class="tile-label">${skill.name}</span>
+            </div>
+            <div class="level-area">
+              <span class="lvl-current">${skillData.level}</span>
+              <span class="lvl-max">99</span>
+            </div>
+          </div>
+        </div>
+      `;
+    });
+
+    // Add total level tile
+    const totalLevel = this.calculateTotalLevel(friend.skills);
+    gridHtml += `
+      <div class="skill-tile total-tile">
+        <div class="total-content">
+          <span class="total-label">Total Level</span>
+          <span class="total-value">${totalLevel}</span>
+        </div>
+      </div>
+    `;
+
+    content.innerHTML = `
+      <div class="friend-view-header">
+        <h3>Viewing: ${friend.name}</h3>
+        <p class="friend-view-meta">Last updated: ${new Date(friend.updatedAt).toLocaleString()}</p>
+      </div>
+      <div class="stats-grid-wrapper friend-stats-wrapper">
+        <div class="stats-grid">
+          ${gridHtml}
+        </div>
+      </div>
+    `;
+
+    Modal.show('friend-view-modal');
+  },
+
+  /**
+   * Fetch friend data from remote (Git/URL)
+   * Prepared for future integration - currently logs and returns local data
+   */
+  async fetchFromRemote(name) {
+    // This is prepared for Git integration
+    // When connected, this would fetch from:
+    // https://raw.githubusercontent.com/<repo>/main/friends/<name>.json
+
+    console.log(`[Friends] Would fetch remote data for: ${name}`);
+
+    // For now, return local data
+    return AppState.friends.sharedRecords[name] || null;
+  },
+
+  /**
+   * Sync all friends from remote index
+   * Prepared for future integration
+   */
+  async syncFromRemote() {
+    // This would fetch friends/index.json from the Git repo
+    // and update local sharedRecords
+
+    console.log('[Friends] Remote sync not yet configured. Using local data.');
+
+    // Future implementation:
+    // const indexUrl = 'https://raw.githubusercontent.com/<repo>/main/friends/index.json';
+    // const response = await fetch(indexUrl);
+    // const index = await response.json();
+    // for (const name of index.names) {
+    //   const recordUrl = `https://raw.githubusercontent.com/<repo>/main/friends/${name}.json`;
+    //   const record = await fetch(recordUrl).then(r => r.json());
+    //   AppState.friends.sharedRecords[name] = record;
+    // }
+    // Storage.save();
   }
 };
 
@@ -1101,5 +1693,5 @@ document.addEventListener('DOMContentLoaded', () => {
   // Expose reset function globally for testing
   window.resetXPGains = Storage.reset.bind(Storage);
 
-  console.log('XPGains v0.2 initialized. Use resetXPGains() to clear all data.');
+  console.log('XPGains v0.3 initialized. Use resetXPGains() to clear all data.');
 });

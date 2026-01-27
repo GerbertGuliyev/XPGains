@@ -16,6 +16,7 @@
         <button class="nav-tab" data-tab="stats-card">Stats Card</button>
         <button class="nav-tab" data-tab="log">Log</button>
         <button class="nav-tab" data-tab="challenges">Challenges</button>
+        <button class="nav-tab" data-tab="friends">Friends</button>
         <button class="nav-tab" data-tab="settings">Settings</button>
       </div>
     </nav>
@@ -68,6 +69,16 @@
         </div>
       </section>
 
+      <!-- Friends Screen -->
+      <section id="friends-screen" class="screen">
+        <div class="screen-header">
+          <h2>Friends</h2>
+        </div>
+        <div id="friends-content" class="friends-container">
+          <!-- Friends content rendered by JS -->
+        </div>
+      </section>
+
       <!-- Settings Screen -->
       <section id="settings-screen" class="screen">
         <div class="screen-header">
@@ -77,6 +88,26 @@
           <!-- Settings content rendered by JS -->
         </div>
       </section>
+
+      <!-- Calibration Modal -->
+      <div id="calibration-modal" class="modal">
+        <div class="modal-content calibration-modal-content">
+          <button class="modal-close">&times;</button>
+          <div id="calibration-content">
+            <!-- Calibration form rendered by JS -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Friend View Modal -->
+      <div id="friend-view-modal" class="modal">
+        <div class="modal-content friend-view-modal-content">
+          <button class="modal-close">&times;</button>
+          <div id="friend-view-content">
+            <!-- Friend's stats rendered by JS -->
+          </div>
+        </div>
+      </div>
 
       <!-- Skill Detail Modal -->
       <div id="skill-detail-modal" class="modal">
