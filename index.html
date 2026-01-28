@@ -1,9 +1,26 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" translate="no">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>XPGains - Train Your Skills</title>
+
+  <!-- Prevent browser auto-translation -->
+  <meta name="google" content="notranslate">
+  <meta http-equiv="Content-Language" content="en">
+
+  <!-- PWA Meta Tags -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="XPGains">
+  <meta name="theme-color" content="#ff981f">
+  <meta name="description" content="Train your muscles like an RPG hero">
+
+  <!-- PWA Icons -->
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/Logo/icon-180.png">
+  <link rel="icon" type="image/png" sizes="167x167" href="assets/Logo/icon-167.png">
+
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -12,12 +29,12 @@
     <nav id="top-nav">
       <img src="assets/Logo/XPGains_Logo.png" alt="XPGains" class="nav-logo">
       <div class="nav-tabs">
-        <button class="nav-tab active" data-tab="muscle-map">Muscle Map</button>
-        <button class="nav-tab" data-tab="stats-card">Stats Card</button>
-        <button class="nav-tab" data-tab="log">Log</button>
-        <button class="nav-tab" data-tab="challenges">Challenges</button>
-        <button class="nav-tab" data-tab="friends">Friends</button>
-        <button class="nav-tab" data-tab="settings">Settings</button>
+        <button class="nav-tab active" data-tab="muscle-map" data-i18n="nav.muscle_map">Muscle Map</button>
+        <button class="nav-tab" data-tab="stats-card" data-i18n="nav.stats_card">Stats Card</button>
+        <button class="nav-tab" data-tab="log" data-i18n="nav.log">Log</button>
+        <button class="nav-tab" data-tab="challenges" data-i18n="nav.challenges">Challenges</button>
+        <button class="nav-tab" data-tab="friends" data-i18n="nav.friends">Friends</button>
+        <button class="nav-tab" data-tab="settings" data-i18n="nav.settings">Settings</button>
       </div>
     </nav>
 
@@ -26,8 +43,13 @@
       <!-- Muscle Map Screen (Default) -->
       <section id="muscle-map-screen" class="screen active">
         <div class="screen-header">
-          <h2>Muscle Map</h2>
-          <p class="screen-subtitle">Select a muscle to train</p>
+          <h2 data-i18n="muscle_map.title">Muscle Map</h2>
+          <p class="screen-subtitle" data-i18n="muscle_map.subtitle">Select a muscle to train</p>
+        </div>
+        <div class="muscle-map-actions" id="muscle-map-actions">
+          <button class="back-btn muscle-map-action-btn" id="open-training-plans">Create Training Plan</button>
+          <button class="back-btn muscle-map-action-btn" id="open-custom-exercise">Add Custom Exercise</button>
+          <button class="back-btn muscle-map-action-btn" id="open-statistics">Statistics</button>
         </div>
         <div id="muscle-map-container" class="muscle-map-container">
           <!-- SVG will be rendered here -->
@@ -37,7 +59,7 @@
       <!-- Stats Card Screen (formerly Skills) -->
       <section id="stats-card-screen" class="screen">
         <div class="screen-header">
-          <h2>Stats Card</h2>
+          <h2 data-i18n="stats_card.title">Stats Card</h2>
         </div>
         <div class="stats-grid-wrapper">
           <div id="stats-grid" class="stats-grid">
@@ -52,17 +74,17 @@
       <!-- Log Screen -->
       <section id="log-screen" class="screen">
         <div class="screen-header">
-          <h2>Training Log</h2>
+          <h2 data-i18n="log.title">Training Log</h2>
         </div>
         <div id="log-entries" class="log-container">
-          <p class="empty-state">No training logged yet. Start training from the Muscle Map!</p>
+          <p class="empty-state" data-i18n="log.empty">No training logged yet. Start training from the Muscle Map!</p>
         </div>
       </section>
 
       <!-- Challenges Screen -->
       <section id="challenges-screen" class="screen">
         <div class="screen-header">
-          <h2>Challenges</h2>
+          <h2 data-i18n="challenges.title">Challenges</h2>
         </div>
         <div id="challenges-content" class="challenges-container">
           <!-- Challenges content rendered by JS -->
@@ -72,7 +94,7 @@
       <!-- Friends Screen -->
       <section id="friends-screen" class="screen">
         <div class="screen-header">
-          <h2>Friends</h2>
+          <h2 data-i18n="friends.title">Friends</h2>
         </div>
         <div id="friends-content" class="friends-container">
           <!-- Friends content rendered by JS -->
@@ -82,12 +104,21 @@
       <!-- Settings Screen -->
       <section id="settings-screen" class="screen">
         <div class="screen-header">
-          <h2>Settings</h2>
+          <h2 data-i18n="settings.title">Settings</h2>
         </div>
         <div id="settings-content" class="settings-container">
           <!-- Settings content rendered by JS -->
         </div>
       </section>
+
+      <!-- Intro Modal -->
+      <div id="intro-modal" class="modal">
+        <div class="modal-content intro-modal-content">
+          <div id="intro-content">
+            <!-- Intro content rendered by JS -->
+          </div>
+        </div>
+      </div>
 
       <!-- Calibration Modal -->
       <div id="calibration-modal" class="modal">
@@ -128,14 +159,70 @@
           </div>
         </div>
       </div>
+
+      <!-- Statistics Modal -->
+      <div id="statistics-modal" class="modal">
+        <div class="modal-content statistics-modal-content">
+          <button class="modal-close">&times;</button>
+          <div id="statistics-content">
+            <!-- Statistics and radar chart rendered by JS -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Training Plans Modal -->
+      <div id="training-plans-modal" class="modal">
+        <div class="modal-content training-plans-modal-content">
+          <button class="modal-close">&times;</button>
+          <div id="training-plans-content">
+            <!-- Training plans list rendered by JS -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Plan Editor Modal -->
+      <div id="plan-editor-modal" class="modal">
+        <div class="modal-content plan-editor-modal-content">
+          <button class="modal-close">&times;</button>
+          <div id="plan-editor-content">
+            <!-- Plan editor form rendered by JS -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Custom Exercise Modal -->
+      <div id="custom-exercise-modal" class="modal">
+        <div class="modal-content custom-exercise-modal-content">
+          <button class="modal-close">&times;</button>
+          <div id="custom-exercise-content">
+            <!-- Custom exercise form rendered by JS -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Equipment Selector Modal -->
+      <div id="equipment-modal" class="modal">
+        <div class="modal-content equipment-modal-content">
+          <button class="modal-close">&times;</button>
+          <div id="equipment-content">
+            <!-- Equipment checkboxes rendered by JS -->
+          </div>
+        </div>
+      </div>
     </main>
 
     <!-- XP Gain Toast -->
     <div id="xp-toast" class="xp-toast">
       <span class="xp-toast-text">+0 XP</span>
     </div>
+
+    <!-- Spillover Toast -->
+    <div id="spillover-toast" class="spillover-toast">
+      <span class="spillover-toast-text"></span>
+    </div>
   </div>
 
+  <script src="translations.js"></script>
   <script src="data.js"></script>
   <script src="app.js"></script>
 </body>

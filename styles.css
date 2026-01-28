@@ -51,6 +51,85 @@
 }
 
 /* ============================================
+   ALTERNATIVE THEME (Light Grey)
+   ============================================ */
+[data-theme="alt"] {
+  --bg-dark: #e8e8e8;
+  --bg-medium: #d8d8d8;
+  --bg-light: #c8c8c8;
+  --bg-tile: #b8b0a8;
+  --bg-tile-hover: #a8a098;
+
+  --border-dark: #a0a0a0;
+  --border-medium: #909090;
+  --border-light: #808080;
+  --border-gold: #a08060;
+
+  --text-primary: #8b4513;
+  --text-secondary: #5a5a5a;
+  --text-light: #3a3a3a;
+  --text-white: #ffffff;
+  --text-dark: #1a1a1a;
+
+  --accent-gold: #b8860b;
+  --accent-green: #228b22;
+  --accent-red: #cc3333;
+  --accent-blue: #4a90d9;
+  --accent-xp: #228b22;
+
+  --progress-bg: #c0c0c0;
+  --progress-fill: #228b22;
+  --progress-border: #909090;
+}
+
+/* Desaturate skill icons in alt theme */
+[data-theme="alt"] .skill-icon-img {
+  filter:
+    grayscale(0.85)
+    saturate(0.2)
+    contrast(1.05)
+    drop-shadow(0 0 1px rgba(0, 0, 0, 0.3))
+    drop-shadow(1px 1px 2px rgba(0, 0, 0, 0.3));
+}
+
+[data-theme="alt"] .skill-tile:hover .skill-icon-img {
+  filter:
+    grayscale(0.7)
+    saturate(0.3)
+    contrast(1.1)
+    brightness(1.05)
+    drop-shadow(0 0 1px rgba(0, 0, 0, 0.4))
+    drop-shadow(1px 1px 2px rgba(0, 0, 0, 0.3));
+}
+
+/* ============================================
+   RTL SUPPORT
+   ============================================ */
+[dir="rtl"] .nav-logo {
+  left: auto;
+  right: var(--spacing-lg);
+}
+
+[dir="rtl"] .exercise-group-header {
+  border-left: none;
+  border-right: 3px solid var(--accent-gold);
+}
+
+[dir="rtl"] .log-entry-right {
+  text-align: left;
+}
+
+[dir="rtl"] .level-area .lvl-current {
+  left: auto;
+  right: 0;
+}
+
+[dir="rtl"] .level-area .lvl-max {
+  right: auto;
+  left: 0;
+}
+
+/* ============================================
    RESET & BASE
    ============================================ */
 * {
@@ -177,6 +256,35 @@ body {
 }
 
 /* ============================================
+   MUSCLE MAP ACTION BUTTONS
+   ============================================ */
+.muscle-map-actions {
+  display: flex;
+  justify-content: center;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-lg);
+  flex-wrap: wrap;
+}
+
+.action-btn {
+  padding: var(--spacing-sm) var(--spacing-lg);
+  background: var(--bg-tile);
+  border: 2px solid var(--border-medium);
+  border-radius: 4px;
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.action-btn:hover {
+  background: var(--bg-tile-hover);
+  border-color: var(--border-gold);
+  color: var(--text-primary);
+}
+
+/* ============================================
    STATS GRID - OSRS Style
    ============================================ */
 
@@ -293,12 +401,11 @@ body {
   color: var(--text-light);
   opacity: 0.8;
   text-align: center;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: clamp(50px, 12vw, 70px);
-  line-height: 1.1;
+  max-width: clamp(55px, 12vw, 75px);
+  line-height: 1.2;
   letter-spacing: 0.2px;
+  word-wrap: break-word;
+  hyphens: auto;
 }
 
 /* Total Level tile content */
@@ -556,6 +663,575 @@ body {
 }
 
 /* ============================================
+   INTRO MODAL
+   ============================================ */
+.intro-modal-content {
+  max-width: 420px;
+  text-align: center;
+}
+
+.intro-title {
+  font-size: 28px;
+  color: var(--text-primary);
+  margin-bottom: var(--spacing-sm);
+}
+
+.intro-subtitle {
+  font-size: 16px;
+  color: var(--text-secondary);
+  margin-bottom: var(--spacing-xl);
+}
+
+.intro-steps {
+  text-align: left;
+  margin-bottom: var(--spacing-xl);
+}
+
+.intro-step {
+  padding: var(--spacing-md);
+  margin-bottom: var(--spacing-sm);
+  background: var(--bg-dark);
+  border-radius: 4px;
+  color: var(--text-light);
+  font-size: 14px;
+}
+
+.intro-btn {
+  width: 100%;
+}
+
+.intro-language-selector {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-lg);
+}
+
+.intro-lang-label {
+  font-size: 24px;
+}
+
+.intro-lang-select {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  background: var(--bg-dark);
+  border: 2px solid var(--border-medium);
+  border-radius: 4px;
+  color: var(--text-light);
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.intro-lang-select:focus {
+  border-color: var(--border-gold);
+  outline: none;
+}
+
+/* ============================================
+   STATISTICS MODAL
+   ============================================ */
+.statistics-modal-content {
+  max-width: 500px;
+}
+
+.statistics-title {
+  font-size: 22px;
+  color: var(--text-primary);
+  text-align: center;
+  margin-bottom: var(--spacing-lg);
+}
+
+.radar-chart-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: var(--spacing-xl);
+}
+
+.radar-chart {
+  max-width: 300px;
+  width: 100%;
+  height: auto;
+}
+
+.radar-axis-label {
+  font-size: 10px;
+  fill: var(--text-secondary);
+}
+
+.radar-polygon {
+  fill: rgba(255, 152, 31, 0.3);
+  stroke: var(--text-primary);
+  stroke-width: 2;
+}
+
+.radar-grid {
+  stroke: var(--border-medium);
+  stroke-width: 1;
+  fill: none;
+}
+
+.muscle-changes-title {
+  font-size: 16px;
+  color: var(--text-primary);
+  margin-bottom: var(--spacing-md);
+  text-align: center;
+}
+
+.muscle-changes-list {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--spacing-sm);
+}
+
+.muscle-change-item {
+  display: flex;
+  justify-content: space-between;
+  padding: var(--spacing-sm);
+  background: var(--bg-dark);
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.muscle-change-name {
+  color: var(--text-light);
+}
+
+.muscle-change-value {
+  font-weight: bold;
+}
+
+.muscle-change-value.positive {
+  color: var(--accent-green);
+}
+
+.muscle-change-value.negative {
+  color: var(--accent-red);
+}
+
+.muscle-change-value.neutral {
+  color: var(--text-secondary);
+}
+
+.stats-empty-state {
+  text-align: center;
+  padding: var(--spacing-xl);
+  color: var(--text-secondary);
+}
+
+/* ============================================
+   TRAINING PLANS MODAL
+   ============================================ */
+.training-plans-modal-content {
+  max-width: 500px;
+}
+
+.plans-title {
+  font-size: 22px;
+  color: var(--text-primary);
+  text-align: center;
+  margin-bottom: var(--spacing-lg);
+}
+
+.plans-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  max-height: 40vh;
+  overflow-y: auto;
+  margin-bottom: var(--spacing-lg);
+}
+
+.plan-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-md);
+  background: var(--bg-dark);
+  border: 2px solid var(--border-dark);
+  border-radius: 4px;
+  transition: border-color 0.15s ease;
+}
+
+.plan-item:hover {
+  border-color: var(--border-medium);
+}
+
+.plan-item-info {
+  flex: 1;
+}
+
+.plan-item-name {
+  font-weight: bold;
+  color: var(--text-light);
+  margin-bottom: 2px;
+}
+
+.plan-item-meta {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.plan-item-actions {
+  display: flex;
+  gap: var(--spacing-xs);
+}
+
+.plan-action-btn {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  background: var(--bg-tile);
+  border: 1px solid var(--border-medium);
+  border-radius: 3px;
+  color: var(--text-secondary);
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.plan-action-btn:hover {
+  background: var(--bg-tile-hover);
+  color: var(--text-light);
+}
+
+.plan-action-btn.run {
+  background: linear-gradient(180deg, #00b050 0%, #008040 100%);
+  border-color: #00d060;
+  color: var(--text-white);
+}
+
+.plan-action-btn.run:hover {
+  background: linear-gradient(180deg, #00c060 0%, #00a050 100%);
+}
+
+.plan-action-btn.delete:hover {
+  background: var(--accent-red);
+  border-color: var(--accent-red);
+  color: var(--text-white);
+}
+
+.plans-empty-state,
+.plans-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: var(--spacing-xl);
+  min-height: 250px;
+}
+
+.plans-empty .plans-title {
+  font-size: 22px;
+  color: var(--text-primary);
+  margin: 0;
+  margin-bottom: var(--spacing-lg);
+}
+
+.plans-empty-text {
+  color: var(--text-secondary);
+  margin-bottom: var(--spacing-xl);
+}
+
+.plans-empty-text p {
+  margin: 0;
+  margin-bottom: var(--spacing-xs);
+}
+
+.plans-empty-text p:last-child {
+  margin-bottom: 0;
+}
+
+/* ============================================
+   PLAN EDITOR MODAL
+   ============================================ */
+.plan-editor-modal-content {
+  max-width: 500px;
+}
+
+.plan-editor-title {
+  font-size: 22px;
+  color: var(--text-primary);
+  text-align: center;
+  margin-bottom: var(--spacing-lg);
+}
+
+.plan-name-input {
+  width: 100%;
+  padding: var(--spacing-md);
+  background: var(--bg-dark);
+  border: 2px solid var(--border-medium);
+  border-radius: 4px;
+  color: var(--text-light);
+  font-size: 16px;
+  margin-bottom: var(--spacing-lg);
+}
+
+.plan-name-input:focus {
+  border-color: var(--border-gold);
+  outline: none;
+}
+
+.plan-name-input::placeholder {
+  color: var(--text-secondary);
+}
+
+.plan-exercises-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  max-height: 30vh;
+  overflow-y: auto;
+  margin-bottom: var(--spacing-lg);
+}
+
+.plan-exercise-row {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm);
+  background: var(--bg-dark);
+  border-radius: 4px;
+}
+
+.plan-exercise-name {
+  flex: 1;
+  color: var(--text-light);
+  font-size: 13px;
+}
+
+.plan-exercise-sets {
+  width: 60px;
+  padding: var(--spacing-xs);
+  background: var(--bg-medium);
+  border: 1px solid var(--border-medium);
+  border-radius: 3px;
+  color: var(--text-light);
+  font-size: 13px;
+  text-align: center;
+}
+
+.plan-exercise-remove {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 18px;
+  cursor: pointer;
+  padding: 0 var(--spacing-xs);
+}
+
+.plan-exercise-remove:hover {
+  color: var(--accent-red);
+}
+
+.plan-editor-actions {
+  display: flex;
+  gap: var(--spacing-sm);
+}
+
+.plan-editor-actions .back-btn {
+  flex: 1;
+  margin-bottom: 0;
+}
+
+.plan-editor-actions .xp-tick-btn {
+  flex: 2;
+}
+
+/* ============================================
+   EQUIPMENT MODAL
+   ============================================ */
+.equipment-modal-content {
+  max-width: 400px;
+}
+
+.equipment-title {
+  font-size: 22px;
+  color: var(--text-primary);
+  text-align: center;
+  margin-bottom: var(--spacing-lg);
+}
+
+.equipment-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-lg);
+}
+
+.equipment-checkbox {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md);
+  background: var(--bg-dark);
+  border: 2px solid var(--border-dark);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.equipment-checkbox:hover {
+  border-color: var(--border-medium);
+}
+
+.equipment-checkbox.checked {
+  border-color: var(--accent-gold);
+  background: rgba(255, 215, 0, 0.1);
+}
+
+.equipment-checkbox input {
+  display: none;
+}
+
+.equipment-check-icon {
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--border-medium);
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  color: transparent;
+  transition: all 0.15s ease;
+}
+
+.equipment-checkbox.checked .equipment-check-icon {
+  background: var(--accent-gold);
+  border-color: var(--accent-gold);
+  color: var(--text-dark);
+}
+
+.equipment-label {
+  color: var(--text-light);
+  font-size: 13px;
+}
+
+/* ============================================
+   CUSTOM EXERCISE MODAL
+   ============================================ */
+.custom-exercise-modal-content {
+  max-width: 420px;
+  max-height: 90vh;
+}
+
+.custom-exercise-editor {
+  padding: var(--spacing-sm) 0;
+}
+
+.custom-exercise-title {
+  font-size: 20px;
+  color: var(--text-primary);
+  text-align: center;
+  margin-bottom: var(--spacing-md);
+}
+
+.custom-exercise-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.custom-exercise-form .input-group {
+  margin-bottom: 0;
+}
+
+.custom-exercise-form .input-label {
+  font-size: 13px;
+  margin-bottom: 4px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.form-label {
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.form-input,
+.form-select {
+  padding: var(--spacing-sm);
+  background: var(--bg-dark);
+  border: 2px solid var(--border-medium);
+  border-radius: 4px;
+  color: var(--text-light);
+  font-size: 14px;
+}
+
+.form-input:focus,
+.form-select:focus {
+  border-color: var(--border-gold);
+  outline: none;
+}
+
+.form-select {
+  cursor: pointer;
+}
+
+.form-row {
+  display: flex;
+  gap: var(--spacing-md);
+}
+
+.form-row .form-group {
+  flex: 1;
+}
+
+/* Custom Exercise Form */
+.custom-exercise-input,
+.custom-exercise-select {
+  width: 100%;
+  padding: 8px 10px;
+  background: var(--bg-dark);
+  border: 2px solid var(--border-medium);
+  border-radius: 4px;
+  color: var(--text-light);
+  font-size: 14px;
+}
+
+.custom-exercise-input:focus,
+.custom-exercise-select:focus {
+  border-color: var(--border-gold);
+  outline: none;
+}
+
+.custom-weight-range {
+  margin-top: var(--spacing-xs);
+}
+
+.custom-weight-range .input-row {
+  display: flex;
+  gap: var(--spacing-sm);
+}
+
+.custom-weight-range .input-half {
+  flex: 1;
+}
+
+.input-label-small {
+  display: block;
+  font-size: 11px;
+  color: var(--text-secondary);
+  margin-bottom: 2px;
+}
+
+.custom-exercise-actions {
+  display: flex;
+  gap: var(--spacing-sm);
+  margin-top: var(--spacing-md);
+}
+
+.custom-exercise-actions .back-btn,
+.custom-exercise-actions .xp-tick-btn {
+  flex: 1;
+  padding: 10px;
+}
+
+/* ============================================
    SKILL DETAIL VIEW
    ============================================ */
 .skill-detail {
@@ -722,6 +1398,12 @@ body {
   color: var(--accent-gold);
 }
 
+.log-entry-spillover {
+  font-size: 10px;
+  color: var(--accent-blue);
+  margin-top: 2px;
+}
+
 /* Progressive overload indicators */
 .indicator-up {
   color: var(--accent-green);
@@ -742,9 +1424,10 @@ body {
 }
 
 .muscle-map-svg {
-  max-width: 400px;
-  width: 100%;
+  width: clamp(200px, 80vw, 400px);
+  max-height: calc(100dvh - 180px);
   height: auto;
+  object-fit: contain;
 }
 
 .muscle-map-svg .muscle-region {
@@ -771,6 +1454,30 @@ body {
   fill: var(--text-light);
   pointer-events: none;
   text-anchor: middle;
+}
+
+/* Landscape mode for muscle map */
+@media (orientation: landscape) and (max-height: 500px) {
+  .muscle-map-svg {
+    max-height: calc(100dvh - 120px);
+    width: auto;
+  }
+
+  .muscle-map-container {
+    padding: var(--spacing-sm);
+  }
+}
+
+/* Small devices */
+@media (max-width: 360px) {
+  .muscle-map-svg {
+    width: 90vw;
+  }
+
+  .muscle-map-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
 }
 
 /* ============================================
@@ -818,6 +1525,11 @@ body {
 .training-list-item.favorite::after {
   content: ' \u2605';
   color: var(--accent-gold);
+}
+
+.training-list-item.filtered-out {
+  opacity: 0.4;
+  pointer-events: none;
 }
 
 /* Exercise Groups (subgroup headers) */
@@ -1197,6 +1909,34 @@ body {
   color: var(--text-white);
 }
 
+/* Language Selector */
+.language-option {
+  display: flex;
+  gap: var(--spacing-sm);
+  align-items: center;
+}
+
+.language-select {
+  flex: 1;
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--bg-dark);
+  border: 2px solid var(--border-medium);
+  border-radius: 4px;
+  color: var(--text-light);
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.language-select:focus {
+  border-color: var(--border-gold);
+  outline: none;
+}
+
+.language-apply-btn {
+  white-space: nowrap;
+  padding: var(--spacing-sm) var(--spacing-md);
+}
+
 /* ============================================
    XP TOAST
    ============================================ */
@@ -1224,6 +1964,63 @@ body {
   font-weight: bold;
   color: var(--accent-xp);
   text-shadow: 0 0 10px var(--accent-xp);
+}
+
+/* Success Toast */
+.success-toast {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%) translateY(100px);
+  background: var(--bg-medium);
+  border: 3px solid #00b050;
+  border-radius: 8px;
+  padding: var(--spacing-md) var(--spacing-xl);
+  z-index: 3000;
+  opacity: 0;
+  transition: all 0.3s ease;
+}
+
+.success-toast.show {
+  transform: translateX(-50%) translateY(0);
+  opacity: 1;
+}
+
+.success-toast-text {
+  font-size: 16px;
+  font-weight: bold;
+  color: #00d060;
+}
+
+/* Spillover Toast */
+.spillover-toast {
+  position: fixed;
+  bottom: 80px;
+  left: 50%;
+  transform: translateX(-50%) translateY(100px);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  z-index: 3000;
+  opacity: 0;
+  transition: all 0.3s ease;
+  pointer-events: none;
+}
+
+.spillover-toast.show {
+  transform: translateX(-50%) translateY(0);
+  opacity: 1;
+}
+
+.spillover-item,
+.spillover-toast-text {
+  background: var(--bg-medium);
+  border: 2px solid var(--accent-blue);
+  border-radius: 4px;
+  padding: var(--spacing-xs) var(--spacing-md);
+  font-size: 14px;
+  color: var(--accent-blue);
+  text-align: center;
 }
 
 /* ============================================
@@ -1604,5 +2401,13 @@ body {
 
   .calibration-skill-info {
     justify-content: center;
+  }
+
+  .muscle-changes-list {
+    grid-template-columns: 1fr;
+  }
+
+  .equipment-grid {
+    grid-template-columns: 1fr;
   }
 }

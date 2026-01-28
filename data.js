@@ -28,6 +28,21 @@ const SKILLS = [
 ];
 
 // ============================================
+// EQUIPMENT TYPES
+// ============================================
+const EQUIPMENT_TYPES = [
+  { id: 'bench', name: 'Bench' },
+  { id: 'dumbbells', name: 'Dumbbells' },
+  { id: 'barbell', name: 'Barbell' },
+  { id: 'cable', name: 'Cable Machine' },
+  { id: 'pullup_bar', name: 'Pull-up Bar' },
+  { id: 'squat_rack', name: 'Squat Rack' },
+  { id: 'machines', name: 'Machines' },
+  { id: 'bands', name: 'Resistance Bands' },
+  { id: 'bodyweight', name: 'Bodyweight Only' }
+];
+
+// ============================================
 // SUBCATEGORIES (for exercise grouping/filtering)
 // ============================================
 const SUBCATEGORIES = [
@@ -94,252 +109,344 @@ const SUBCATEGORIES = [
 // EXERCISES with per-exercise weight configs
 // Weight configs: { min, max, step, default } in KG
 // type: 'compound' or 'isolation' (affects base XP)
+// requiredEquipment: array of equipment IDs needed
 // ============================================
 const EXERCISES = [
   // Chest exercises
   {
     id: 'bench_press', skillId: 'chest', subcategoryIds: ['chest_mid'], name: 'Bench Press',
-    type: 'compound', weight: { min: 20, max: 220, step: 2.5, default: 60 }, referenceWeight: 80
+    type: 'compound', weight: { min: 20, max: 220, step: 2.5, default: 60 }, referenceWeight: 80,
+    requiredEquipment: ['bench', 'barbell']
   },
   {
     id: 'incline_bench', skillId: 'chest', subcategoryIds: ['chest_upper'], name: 'Incline Bench Press',
-    type: 'compound', weight: { min: 20, max: 180, step: 2.5, default: 50 }, referenceWeight: 70
+    type: 'compound', weight: { min: 20, max: 180, step: 2.5, default: 50 }, referenceWeight: 70,
+    requiredEquipment: ['bench', 'barbell']
   },
   {
     id: 'decline_bench', skillId: 'chest', subcategoryIds: ['chest_lower'], name: 'Decline Bench Press',
-    type: 'compound', weight: { min: 20, max: 200, step: 2.5, default: 55 }, referenceWeight: 75
+    type: 'compound', weight: { min: 20, max: 200, step: 2.5, default: 55 }, referenceWeight: 75,
+    requiredEquipment: ['bench', 'barbell']
   },
   {
     id: 'dumbbell_fly', skillId: 'chest', subcategoryIds: ['chest_mid'], name: 'Dumbbell Fly',
-    type: 'isolation', weight: { min: 4, max: 40, step: 2, default: 14 }, referenceWeight: 18
+    type: 'isolation', weight: { min: 4, max: 40, step: 2, default: 14 }, referenceWeight: 18,
+    requiredEquipment: ['bench', 'dumbbells']
   },
   {
     id: 'cable_crossover', skillId: 'chest', subcategoryIds: ['chest_mid', 'chest_lower'], name: 'Cable Crossover',
-    type: 'isolation', weight: { min: 5, max: 50, step: 2.5, default: 15 }, referenceWeight: 20
+    type: 'isolation', weight: { min: 5, max: 50, step: 2.5, default: 15 }, referenceWeight: 20,
+    requiredEquipment: ['cable']
   },
   {
     id: 'push_ups', skillId: 'chest', subcategoryIds: ['chest_mid'], name: 'Push Ups',
-    type: 'compound', weight: { min: 0, max: 50, step: 2.5, default: 0 }, referenceWeight: 0
+    type: 'compound', weight: { min: 0, max: 50, step: 2.5, default: 0 }, referenceWeight: 0,
+    requiredEquipment: ['bodyweight']
   },
 
   // Back - Lats
   {
     id: 'pull_ups', skillId: 'back_lats', subcategoryIds: ['lats_width'], name: 'Pull Ups',
-    type: 'compound', weight: { min: 0, max: 60, step: 2.5, default: 0 }, referenceWeight: 0
+    type: 'compound', weight: { min: 0, max: 60, step: 2.5, default: 0 }, referenceWeight: 0,
+    requiredEquipment: ['pullup_bar']
   },
   {
     id: 'lat_pulldown', skillId: 'back_lats', subcategoryIds: ['lats_width'], name: 'Lat Pulldown',
-    type: 'compound', weight: { min: 15, max: 150, step: 2.5, default: 55 }, referenceWeight: 70
+    type: 'compound', weight: { min: 15, max: 150, step: 2.5, default: 55 }, referenceWeight: 70,
+    requiredEquipment: ['cable', 'machines']
   },
   {
     id: 'barbell_row', skillId: 'back_lats', subcategoryIds: ['lats_thickness'], name: 'Barbell Row',
-    type: 'compound', weight: { min: 20, max: 180, step: 2.5, default: 60 }, referenceWeight: 80
+    type: 'compound', weight: { min: 20, max: 180, step: 2.5, default: 60 }, referenceWeight: 80,
+    requiredEquipment: ['barbell']
   },
   {
     id: 'cable_row', skillId: 'back_lats', subcategoryIds: ['lats_thickness'], name: 'Cable Row',
-    type: 'compound', weight: { min: 15, max: 150, step: 2.5, default: 50 }, referenceWeight: 65
+    type: 'compound', weight: { min: 15, max: 150, step: 2.5, default: 50 }, referenceWeight: 65,
+    requiredEquipment: ['cable']
   },
   {
     id: 'dumbbell_row', skillId: 'back_lats', subcategoryIds: ['lats_thickness'], name: 'Dumbbell Row',
-    type: 'compound', weight: { min: 8, max: 70, step: 2, default: 25 }, referenceWeight: 35
+    type: 'compound', weight: { min: 8, max: 70, step: 2, default: 25 }, referenceWeight: 35,
+    requiredEquipment: ['dumbbells', 'bench']
   },
 
   // Back - Erector
   {
     id: 'deadlift', skillId: 'back_erector', subcategoryIds: ['erector_lower'], name: 'Deadlift',
-    type: 'compound', weight: { min: 40, max: 300, step: 5, default: 100 }, referenceWeight: 140
+    type: 'compound', weight: { min: 40, max: 300, step: 5, default: 100 }, referenceWeight: 140,
+    requiredEquipment: ['barbell']
   },
   {
     id: 'back_extension', skillId: 'back_erector', subcategoryIds: ['erector_lower'], name: 'Back Extension',
-    type: 'isolation', weight: { min: 0, max: 40, step: 2.5, default: 10 }, referenceWeight: 15
+    type: 'isolation', weight: { min: 0, max: 40, step: 2.5, default: 10 }, referenceWeight: 15,
+    requiredEquipment: ['machines', 'bodyweight']
   },
   {
     id: 'good_morning', skillId: 'back_erector', subcategoryIds: ['erector_lower'], name: 'Good Morning',
-    type: 'compound', weight: { min: 20, max: 120, step: 2.5, default: 40 }, referenceWeight: 60
+    type: 'compound', weight: { min: 20, max: 120, step: 2.5, default: 40 }, referenceWeight: 60,
+    requiredEquipment: ['barbell']
   },
 
   // Traps
   {
     id: 'barbell_shrug', skillId: 'traps', subcategoryIds: ['traps_upper'], name: 'Barbell Shrug',
-    type: 'isolation', weight: { min: 20, max: 180, step: 5, default: 60 }, referenceWeight: 80
+    type: 'isolation', weight: { min: 20, max: 180, step: 5, default: 60 }, referenceWeight: 80,
+    requiredEquipment: ['barbell']
   },
   {
     id: 'dumbbell_shrug', skillId: 'traps', subcategoryIds: ['traps_upper'], name: 'Dumbbell Shrug',
-    type: 'isolation', weight: { min: 8, max: 60, step: 2, default: 25 }, referenceWeight: 35
+    type: 'isolation', weight: { min: 8, max: 60, step: 2, default: 25 }, referenceWeight: 35,
+    requiredEquipment: ['dumbbells']
   },
   {
     id: 'face_pull', skillId: 'traps', subcategoryIds: ['traps_mid'], name: 'Face Pull',
-    type: 'isolation', weight: { min: 5, max: 50, step: 2.5, default: 20 }, referenceWeight: 25
+    type: 'isolation', weight: { min: 5, max: 50, step: 2.5, default: 20 }, referenceWeight: 25,
+    requiredEquipment: ['cable']
   },
 
   // Neck
   {
     id: 'neck_curl', skillId: 'neck', subcategoryIds: ['neck_front'], name: 'Neck Curl',
-    type: 'isolation', weight: { min: 2, max: 25, step: 1, default: 8 }, referenceWeight: 10
+    type: 'isolation', weight: { min: 2, max: 25, step: 1, default: 8 }, referenceWeight: 10,
+    requiredEquipment: ['bodyweight', 'bands']
   },
   {
     id: 'neck_extension', skillId: 'neck', subcategoryIds: ['neck_back'], name: 'Neck Extension',
-    type: 'isolation', weight: { min: 2, max: 30, step: 1, default: 10 }, referenceWeight: 12
+    type: 'isolation', weight: { min: 2, max: 30, step: 1, default: 10 }, referenceWeight: 12,
+    requiredEquipment: ['bodyweight', 'bands']
   },
 
   // Delts
   {
     id: 'overhead_press', skillId: 'delts', subcategoryIds: ['delts_front'], name: 'Overhead Press',
-    type: 'compound', weight: { min: 20, max: 120, step: 2.5, default: 40 }, referenceWeight: 55
+    type: 'compound', weight: { min: 20, max: 120, step: 2.5, default: 40 }, referenceWeight: 55,
+    requiredEquipment: ['barbell', 'squat_rack']
   },
   {
     id: 'lateral_raise', skillId: 'delts', subcategoryIds: ['delts_side'], name: 'Lateral Raise',
-    type: 'isolation', weight: { min: 2, max: 25, step: 1, default: 8 }, referenceWeight: 12
+    type: 'isolation', weight: { min: 2, max: 25, step: 1, default: 8 }, referenceWeight: 12,
+    requiredEquipment: ['dumbbells']
   },
   {
     id: 'front_raise', skillId: 'delts', subcategoryIds: ['delts_front'], name: 'Front Raise',
-    type: 'isolation', weight: { min: 2, max: 25, step: 1, default: 8 }, referenceWeight: 12
+    type: 'isolation', weight: { min: 2, max: 25, step: 1, default: 8 }, referenceWeight: 12,
+    requiredEquipment: ['dumbbells']
   },
   {
     id: 'reverse_fly', skillId: 'delts', subcategoryIds: ['delts_rear'], name: 'Reverse Fly',
-    type: 'isolation', weight: { min: 2, max: 25, step: 1, default: 8 }, referenceWeight: 12
+    type: 'isolation', weight: { min: 2, max: 25, step: 1, default: 8 }, referenceWeight: 12,
+    requiredEquipment: ['dumbbells', 'cable']
   },
 
   // Biceps
   {
     id: 'barbell_curl', skillId: 'biceps', subcategoryIds: ['biceps_long', 'biceps_short'], name: 'Barbell Curl',
-    type: 'isolation', weight: { min: 10, max: 80, step: 2.5, default: 30 }, referenceWeight: 40
+    type: 'isolation', weight: { min: 10, max: 80, step: 2.5, default: 30 }, referenceWeight: 40,
+    requiredEquipment: ['barbell']
   },
   {
     id: 'dumbbell_curl', skillId: 'biceps', subcategoryIds: ['biceps_long', 'biceps_short'], name: 'Dumbbell Curl',
-    type: 'isolation', weight: { min: 4, max: 35, step: 1, default: 12 }, referenceWeight: 16
+    type: 'isolation', weight: { min: 4, max: 35, step: 1, default: 12 }, referenceWeight: 16,
+    requiredEquipment: ['dumbbells']
   },
   {
     id: 'hammer_curl', skillId: 'biceps', subcategoryIds: ['biceps_long'], name: 'Hammer Curl',
-    type: 'isolation', weight: { min: 4, max: 40, step: 1, default: 14 }, referenceWeight: 18
+    type: 'isolation', weight: { min: 4, max: 40, step: 1, default: 14 }, referenceWeight: 18,
+    requiredEquipment: ['dumbbells']
   },
   {
     id: 'preacher_curl', skillId: 'biceps', subcategoryIds: ['biceps_short'], name: 'Preacher Curl',
-    type: 'isolation', weight: { min: 5, max: 50, step: 2.5, default: 20 }, referenceWeight: 28
+    type: 'isolation', weight: { min: 5, max: 50, step: 2.5, default: 20 }, referenceWeight: 28,
+    requiredEquipment: ['barbell', 'bench']
   },
 
   // Triceps
   {
     id: 'tricep_pushdown', skillId: 'triceps', subcategoryIds: ['triceps_lateral'], name: 'Tricep Pushdown',
-    type: 'isolation', weight: { min: 10, max: 80, step: 2.5, default: 30 }, referenceWeight: 40
+    type: 'isolation', weight: { min: 10, max: 80, step: 2.5, default: 30 }, referenceWeight: 40,
+    requiredEquipment: ['cable']
   },
   {
     id: 'skull_crusher', skillId: 'triceps', subcategoryIds: ['triceps_long'], name: 'Skull Crusher',
-    type: 'isolation', weight: { min: 10, max: 60, step: 2.5, default: 25 }, referenceWeight: 35
+    type: 'isolation', weight: { min: 10, max: 60, step: 2.5, default: 25 }, referenceWeight: 35,
+    requiredEquipment: ['barbell', 'bench']
   },
   {
     id: 'overhead_extension', skillId: 'triceps', subcategoryIds: ['triceps_long'], name: 'Overhead Extension',
-    type: 'isolation', weight: { min: 8, max: 50, step: 2, default: 20 }, referenceWeight: 28
+    type: 'isolation', weight: { min: 8, max: 50, step: 2, default: 20 }, referenceWeight: 28,
+    requiredEquipment: ['dumbbells']
   },
   {
     id: 'dips', skillId: 'triceps', subcategoryIds: ['triceps_lateral', 'triceps_medial'], name: 'Dips',
-    type: 'compound', weight: { min: 0, max: 60, step: 2.5, default: 0 }, referenceWeight: 0
+    type: 'compound', weight: { min: 0, max: 60, step: 2.5, default: 0 }, referenceWeight: 0,
+    requiredEquipment: ['bodyweight']
   },
 
   // Forearms
   {
     id: 'wrist_curl', skillId: 'forearms', subcategoryIds: ['forearms_flexors'], name: 'Wrist Curl',
-    type: 'isolation', weight: { min: 5, max: 40, step: 1, default: 15 }, referenceWeight: 20
+    type: 'isolation', weight: { min: 5, max: 40, step: 1, default: 15 }, referenceWeight: 20,
+    requiredEquipment: ['dumbbells', 'barbell']
   },
   {
     id: 'reverse_wrist_curl', skillId: 'forearms', subcategoryIds: ['forearms_extensors'], name: 'Reverse Wrist Curl',
-    type: 'isolation', weight: { min: 2, max: 25, step: 1, default: 10 }, referenceWeight: 12
+    type: 'isolation', weight: { min: 2, max: 25, step: 1, default: 10 }, referenceWeight: 12,
+    requiredEquipment: ['dumbbells', 'barbell']
   },
   {
     id: 'farmers_walk', skillId: 'forearms', subcategoryIds: ['forearms_flexors'], name: 'Farmers Walk',
-    type: 'compound', weight: { min: 10, max: 80, step: 2, default: 30 }, referenceWeight: 40
+    type: 'compound', weight: { min: 10, max: 80, step: 2, default: 30 }, referenceWeight: 40,
+    requiredEquipment: ['dumbbells']
   },
 
   // Core
   {
     id: 'crunch', skillId: 'core', subcategoryIds: ['core_abs'], name: 'Crunch',
-    type: 'isolation', weight: { min: 0, max: 30, step: 2.5, default: 0 }, referenceWeight: 0
+    type: 'isolation', weight: { min: 0, max: 30, step: 2.5, default: 0 }, referenceWeight: 0,
+    requiredEquipment: ['bodyweight']
   },
   {
     id: 'leg_raise', skillId: 'core', subcategoryIds: ['core_abs'], name: 'Leg Raise',
-    type: 'isolation', weight: { min: 0, max: 20, step: 1, default: 0 }, referenceWeight: 0
+    type: 'isolation', weight: { min: 0, max: 20, step: 1, default: 0 }, referenceWeight: 0,
+    requiredEquipment: ['bodyweight', 'pullup_bar']
   },
   {
     id: 'plank', skillId: 'core', subcategoryIds: ['core_abs'], name: 'Plank',
-    type: 'isolation', weight: { min: 0, max: 30, step: 2.5, default: 0 }, referenceWeight: 0
+    type: 'isolation', weight: { min: 0, max: 30, step: 2.5, default: 0 }, referenceWeight: 0,
+    requiredEquipment: ['bodyweight']
   },
   {
     id: 'russian_twist', skillId: 'core', subcategoryIds: ['core_obliques'], name: 'Russian Twist',
-    type: 'isolation', weight: { min: 0, max: 25, step: 1, default: 8 }, referenceWeight: 10
+    type: 'isolation', weight: { min: 0, max: 25, step: 1, default: 8 }, referenceWeight: 10,
+    requiredEquipment: ['bodyweight', 'dumbbells']
   },
   {
     id: 'side_plank', skillId: 'core', subcategoryIds: ['core_obliques'], name: 'Side Plank',
-    type: 'isolation', weight: { min: 0, max: 20, step: 2.5, default: 0 }, referenceWeight: 0
+    type: 'isolation', weight: { min: 0, max: 20, step: 2.5, default: 0 }, referenceWeight: 0,
+    requiredEquipment: ['bodyweight']
   },
   {
     id: 'cable_crunch', skillId: 'core', subcategoryIds: ['core_abs'], name: 'Cable Crunch',
-    type: 'isolation', weight: { min: 10, max: 80, step: 2.5, default: 30 }, referenceWeight: 40
+    type: 'isolation', weight: { min: 10, max: 80, step: 2.5, default: 30 }, referenceWeight: 40,
+    requiredEquipment: ['cable']
   },
 
   // Glutes
   {
     id: 'hip_thrust', skillId: 'glutes', subcategoryIds: ['glutes_max'], name: 'Hip Thrust',
-    type: 'compound', weight: { min: 20, max: 250, step: 5, default: 80 }, referenceWeight: 120
+    type: 'compound', weight: { min: 20, max: 250, step: 5, default: 80 }, referenceWeight: 120,
+    requiredEquipment: ['barbell', 'bench']
   },
   {
     id: 'glute_bridge', skillId: 'glutes', subcategoryIds: ['glutes_max'], name: 'Glute Bridge',
-    type: 'isolation', weight: { min: 0, max: 100, step: 5, default: 40 }, referenceWeight: 60
+    type: 'isolation', weight: { min: 0, max: 100, step: 5, default: 40 }, referenceWeight: 60,
+    requiredEquipment: ['bodyweight', 'barbell']
   },
   {
     id: 'cable_kickback', skillId: 'glutes', subcategoryIds: ['glutes_max'], name: 'Cable Kickback',
-    type: 'isolation', weight: { min: 5, max: 40, step: 2.5, default: 15 }, referenceWeight: 20
+    type: 'isolation', weight: { min: 5, max: 40, step: 2.5, default: 15 }, referenceWeight: 20,
+    requiredEquipment: ['cable']
   },
   {
     id: 'clamshell', skillId: 'glutes', subcategoryIds: ['glutes_med'], name: 'Clamshell',
-    type: 'isolation', weight: { min: 0, max: 20, step: 1, default: 5 }, referenceWeight: 8
+    type: 'isolation', weight: { min: 0, max: 20, step: 1, default: 5 }, referenceWeight: 8,
+    requiredEquipment: ['bodyweight', 'bands']
   },
 
   // Quads
   {
     id: 'squat', skillId: 'quads', subcategoryIds: ['quads_vastus', 'quads_rectus'], name: 'Squat',
-    type: 'compound', weight: { min: 20, max: 280, step: 5, default: 80 }, referenceWeight: 120
+    type: 'compound', weight: { min: 20, max: 280, step: 5, default: 80 }, referenceWeight: 120,
+    requiredEquipment: ['barbell', 'squat_rack']
   },
   {
     id: 'leg_press', skillId: 'quads', subcategoryIds: ['quads_vastus'], name: 'Leg Press',
-    type: 'compound', weight: { min: 40, max: 500, step: 10, default: 160 }, referenceWeight: 220
+    type: 'compound', weight: { min: 40, max: 500, step: 10, default: 160 }, referenceWeight: 220,
+    requiredEquipment: ['machines']
   },
   {
     id: 'leg_extension', skillId: 'quads', subcategoryIds: ['quads_vastus', 'quads_rectus'], name: 'Leg Extension',
-    type: 'isolation', weight: { min: 10, max: 120, step: 2.5, default: 40 }, referenceWeight: 55
+    type: 'isolation', weight: { min: 10, max: 120, step: 2.5, default: 40 }, referenceWeight: 55,
+    requiredEquipment: ['machines']
   },
   {
     id: 'lunge', skillId: 'quads', subcategoryIds: ['quads_vastus'], name: 'Lunge',
-    type: 'compound', weight: { min: 0, max: 80, step: 2, default: 20 }, referenceWeight: 30
+    type: 'compound', weight: { min: 0, max: 80, step: 2, default: 20 }, referenceWeight: 30,
+    requiredEquipment: ['bodyweight', 'dumbbells']
   },
 
   // Hamstrings
   {
     id: 'romanian_deadlift', skillId: 'hamstrings', subcategoryIds: ['hams_bicep', 'hams_semi'], name: 'Romanian Deadlift',
-    type: 'compound', weight: { min: 30, max: 200, step: 5, default: 70 }, referenceWeight: 100
+    type: 'compound', weight: { min: 30, max: 200, step: 5, default: 70 }, referenceWeight: 100,
+    requiredEquipment: ['barbell']
   },
   {
     id: 'leg_curl', skillId: 'hamstrings', subcategoryIds: ['hams_bicep', 'hams_semi'], name: 'Leg Curl',
-    type: 'isolation', weight: { min: 10, max: 100, step: 2.5, default: 35 }, referenceWeight: 50
+    type: 'isolation', weight: { min: 10, max: 100, step: 2.5, default: 35 }, referenceWeight: 50,
+    requiredEquipment: ['machines']
   },
   {
     id: 'nordic_curl', skillId: 'hamstrings', subcategoryIds: ['hams_bicep'], name: 'Nordic Curl',
-    type: 'isolation', weight: { min: 0, max: 30, step: 2.5, default: 0 }, referenceWeight: 0
+    type: 'isolation', weight: { min: 0, max: 30, step: 2.5, default: 0 }, referenceWeight: 0,
+    requiredEquipment: ['bodyweight']
   },
 
   // Calves
   {
     id: 'standing_calf_raise', skillId: 'calves', subcategoryIds: ['calves_gastro'], name: 'Standing Calf Raise',
-    type: 'isolation', weight: { min: 20, max: 200, step: 5, default: 80 }, referenceWeight: 100
+    type: 'isolation', weight: { min: 20, max: 200, step: 5, default: 80 }, referenceWeight: 100,
+    requiredEquipment: ['machines']
   },
   {
     id: 'seated_calf_raise', skillId: 'calves', subcategoryIds: ['calves_soleus'], name: 'Seated Calf Raise',
-    type: 'isolation', weight: { min: 10, max: 120, step: 5, default: 40 }, referenceWeight: 60
+    type: 'isolation', weight: { min: 10, max: 120, step: 5, default: 40 }, referenceWeight: 60,
+    requiredEquipment: ['machines']
   },
   {
     id: 'donkey_calf_raise', skillId: 'calves', subcategoryIds: ['calves_gastro'], name: 'Donkey Calf Raise',
-    type: 'isolation', weight: { min: 20, max: 180, step: 5, default: 60 }, referenceWeight: 80
+    type: 'isolation', weight: { min: 20, max: 180, step: 5, default: 60 }, referenceWeight: 80,
+    requiredEquipment: ['machines']
   }
 ];
+
+// ============================================
+// EXERCISE SPILLOVER MAPPING
+// Defines secondary muscle XP percentages for compound exercises
+// ============================================
+const EXERCISE_SPILLOVER = {
+  // Chest compounds
+  bench_press: { triceps: 0.15, delts: 0.10 },
+  incline_bench: { triceps: 0.15, delts: 0.15 },
+  decline_bench: { triceps: 0.15 },
+  push_ups: { triceps: 0.15, delts: 0.10, core: 0.05 },
+
+  // Back compounds
+  pull_ups: { biceps: 0.20, forearms: 0.10 },
+  lat_pulldown: { biceps: 0.15, forearms: 0.05 },
+  barbell_row: { biceps: 0.15, forearms: 0.10, back_erector: 0.10 },
+  cable_row: { biceps: 0.12, forearms: 0.08 },
+  dumbbell_row: { biceps: 0.15, forearms: 0.08 },
+  deadlift: { glutes: 0.25, hamstrings: 0.20, quads: 0.10, forearms: 0.10, traps: 0.10 },
+
+  // Shoulder compounds
+  overhead_press: { triceps: 0.15, traps: 0.10, core: 0.05 },
+
+  // Triceps compounds
+  dips: { chest: 0.20, delts: 0.10 },
+
+  // Leg compounds
+  squat: { glutes: 0.25, hamstrings: 0.15, core: 0.10, back_erector: 0.05 },
+  leg_press: { glutes: 0.15, hamstrings: 0.10 },
+  lunge: { glutes: 0.20, hamstrings: 0.10, core: 0.05 },
+  hip_thrust: { hamstrings: 0.15, core: 0.05 },
+  romanian_deadlift: { glutes: 0.20, back_erector: 0.15, forearms: 0.05 },
+  good_morning: { glutes: 0.15, hamstrings: 0.20 },
+
+  // Forearm compounds
+  farmers_walk: { traps: 0.15, core: 0.10 }
+};
 
 // ============================================
 // XP CALCULATION SYSTEM
@@ -540,6 +647,15 @@ function getTotalLevel(skillXp) {
   }, 0);
 }
 
+/**
+ * Get spillover XP mapping for an exercise
+ * @param {string} exerciseId - The exercise ID
+ * @returns {Object|null} Spillover mapping or null if none
+ */
+function getExerciseSpillover(exerciseId) {
+  return EXERCISE_SPILLOVER[exerciseId] || null;
+}
+
 // ============================================
 // UNIT CONVERSION
 // ============================================
@@ -571,14 +687,25 @@ function getSubcategoriesBySkill(skillId) {
 }
 
 function getExercisesBySkill(skillId) {
-  return EXERCISES.filter(e => e.skillId === skillId);
+  // Check for custom exercises first
+  const customExercises = typeof CustomExercises !== 'undefined'
+    ? CustomExercises.getByMuscle(skillId)
+    : [];
+  const standardExercises = EXERCISES.filter(e => e.skillId === skillId);
+  return [...standardExercises, ...customExercises];
 }
 
 function getExercisesBySubcategory(subcategoryId) {
+  // Return standard exercises only - custom exercises are handled separately by TrainingFlow
   return EXERCISES.filter(e => e.subcategoryIds.includes(subcategoryId));
 }
 
 function getExerciseById(id) {
+  // Check custom exercises first
+  if (typeof CustomExercises !== 'undefined') {
+    const custom = CustomExercises.getById(id);
+    if (custom) return custom;
+  }
   return EXERCISES.find(e => e.id === id);
 }
 
@@ -609,4 +736,33 @@ function getRandomExercises(skillId, count) {
     result.push(pool.splice(index, 1)[0]);
   }
   return result;
+}
+
+/**
+ * Get equipment type by ID
+ * @param {string} id - Equipment ID
+ * @returns {Object|undefined} Equipment type object
+ */
+function getEquipmentById(id) {
+  return EQUIPMENT_TYPES.find(e => e.id === id);
+}
+
+/**
+ * Filter exercises by available equipment
+ * @param {Array} exercises - Array of exercises to filter
+ * @param {Array} availableEquipment - Array of available equipment IDs
+ * @returns {Array} Filtered exercises
+ */
+function filterExercisesByEquipment(exercises, availableEquipment) {
+  if (!availableEquipment || availableEquipment.length === 0) {
+    return exercises;
+  }
+
+  return exercises.filter(exercise => {
+    if (!exercise.requiredEquipment || exercise.requiredEquipment.length === 0) {
+      return true;
+    }
+    // Exercise is available if user has ANY of the required equipment options
+    return exercise.requiredEquipment.some(eq => availableEquipment.includes(eq));
+  });
 }

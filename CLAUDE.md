@@ -6,7 +6,7 @@
 
 The app rewards users with XP for logging workout sets, calculated based on weight lifted, reps performed, and exercise type. The visual design mimics OSRS's distinctive aesthetic, including the characteristic skill card grid layout.
 
-**Current Version:** v0.2
+**Current Version:** v0.4
 
 ---
 
@@ -14,10 +14,74 @@ The app rewards users with XP for logging workout sets, calculated based on weig
 
 ### Core Features
 - **Muscle Map** - Interactive SVG body diagram for selecting muscles to train
-- **Stats Card** - OSRS-style 5x3 grid displaying all 14 muscle skills with current/max levels
+- **Stats Card** - OSRS-style 5x3 grid displaying all 14 muscle skills with current/max levels + Total Level tile
 - **Training Flow** - Muscle selection → Exercise selection → Weight/Reps input → XP award
 - **Training Log** - Complete history of logged sets, grouped by day with XP totals
+- **Undo** - Each log entry has an Undo button to reverse accidental XP ticks (subtracts XP, removes entry)
 - **XP Toast** - Visual feedback showing XP gained after each set
+
+### v0.4 Features
+
+#### Internationalization (i18n)
+- **15 Languages** - English, German, French, Spanish, Italian, Portuguese, Dutch, Polish, Czech, Swedish, Norwegian, Danish, Finnish, Russian, Arabic
+- **Complete Translations** - German and Russian fully translated; other languages fall back to English
+- **RTL Support** - Arabic displays right-to-left with proper layout mirroring
+- **OS Language Detection** - Automatically detects browser/OS language on first visit
+- **Language Selector** - Dropdown in Settings and Intro Modal with emoji flags
+- **Dynamic UI Updates** - All text updates when language changes (requires Apply button)
+
+#### Theme System
+- **Classic Theme** - Original OSRS-inspired dark theme (default)
+- **Alternative Theme** - Light grey palette with desaturated skill icons
+- **CSS Custom Properties** - Theme applied via `data-theme` attribute on `<html>`
+
+#### Intro Modal
+- **First-Time Welcome** - Shows for new users (Total Level = 14)
+- **Quick Start Guide** - Explains how to use the app
+- **Language Selector** - Choose language with emoji flags before starting
+- **Dismissible** - "Got it" button sets `xpgains_intro_dismissed` flag
+
+#### PWA Support
+- **manifest.json** - Enables "Add to Home Screen" on mobile
+- **App Icons** - 120px, 167px, 180px icons for iOS/Android
+- **Standalone Mode** - Runs without browser chrome when installed
+- **Theme Color** - Orange (#ff981f) status bar on supported devices
+
+#### Training Plans
+- **Plan Builder** - Create named workout plans with multiple exercises
+- **Exercise Selection** - Pick muscle → exercise with optional sets/reps/weight targets
+- **Plan Library** - View, edit, delete saved plans
+- **Run Plan** - Execute plan items with prefilled values from plan
+
+#### Custom Exercises
+- **Create Your Own** - Define exercises not in the default list
+- **Weight Presets** - Light/Medium/Heavy/Custom weight range options
+- **Custom XP Mode** - Option to set fixed XP per set instead of standard calculation
+- **Muscle Assignment** - Link custom exercises to any of the 14 muscle groups
+- **Success Toast** - Confirmation message with fade effect when created
+
+#### Equipment Filtering
+- **Equipment Mode** - Toggle in Settings to enable/disable filtering
+- **Equipment Selection** - Checkboxes for: Bench, Dumbbells, Barbell, Cable, Pull-up Bar, Squat Rack, Machines, Bands, Bodyweight
+- **Smart Filtering** - Only shows exercises matching your available equipment
+- **All Exercises Tagged** - 48 exercises have `requiredEquipment` arrays in data.js
+
+#### Spillover XP
+- **Secondary Muscle XP** - Compound exercises award bonus XP to secondary muscles
+- **Silent Awards** - Spillover XP given without toast notification (less intrusive)
+- **Balanced Percentages** - 5-25% spillover to keep progression fair
+- **Examples**: Bench Press → Triceps 15%, Delts 10%; Squats → Glutes 25%, Hamstrings 15%
+
+#### Statistics Modal
+- **Radar Chart** - Pure SVG visualization of 6 training metrics
+- **Metrics Tracked**: Upper Body %, Lower Body %, Consistency, Volume, Diversity, Progression
+- **Muscle Changes** - Shows % improvement vs previous week for all 14 muscles
+- **Set History** - Detailed tracking with timestamps for analytics
+
+#### Additional Improvements
+- **Muscle Map Scaling** - Responsive sizing with `clamp()` and viewport constraints
+- **Text Wrapping** - Skill labels and statistics wrap instead of truncating
+- **Browser Translation Prevention** - Meta tags prevent auto-translation interference
 
 ### XP System
 - **Geometric progression** - Calibrated for 6-8 years to max a skill at baseline volume
@@ -25,6 +89,7 @@ The app rewards users with XP for logging workout sets, calculated based on weig
 - **Base XP values** - Compound exercises: 50 XP, Isolation: 35 XP
 - **Reps factor** - Scales from 0.6x to 2.0x based on rep count
 - **Intensity factor** - Scales based on weight vs reference weight (0.7x to 1.6x)
+- **XP Bar Color Interpolation** - Progress bar gradient from red→orange→yellow→green
 
 ### Bonus Systems
 - **Neglected Muscle Bonus** - +10% XP for muscles not trained in 7+ days (only if previously trained)
@@ -37,14 +102,41 @@ The app rewards users with XP for logging workout sets, calculated based on weig
 - **Ironman** - 3 muscles, 4 exercises each, 4 sets per exercise
 - Body focus options: Full Random, Upper Body, Lower Body
 
+### Friends System
+- **Friends Tab** - View and manage friend list with search and pagination
+- **Share Progress** - Export your stats under a chosen name
+- **Friend Favorites** - Star friends to pin them at the top of the list
+- **Friend View Modal** - Click a friend to view their full stats card
+- **Prepared for Git sync** - JSON export ready for future remote integration
+
 ### User Preferences
 - **Favorites** - Mark frequently used exercises (shown first in lists)
 - **Unit toggle** - KG or LBS display (all data stored in KG internally)
+- **Calibration** - Manually set skill levels when migrating from another tracker (Settings → Calibrate Skills)
+- **Last Exercise Inputs** - Remembers weight/reps per exercise between sessions
 - **Data reset** - Clear all progress with confirmation
 
 ### Data Persistence
 - All data saved to browser localStorage
-- Keys prefixed with `xpgains_` (skillXp, favorites, logEntries, settings, challenge)
+- Keys prefixed with `xpgains_`:
+
+| Key | Description |
+|-----|-------------|
+| `xpgains_skillXp` | XP values for all 14 skills |
+| `xpgains_favorites` | Favorited exercise IDs |
+| `xpgains_logEntries` | Training log history |
+| `xpgains_settings` | User preferences (units, etc.) |
+| `xpgains_challenge` | Current active challenge state |
+| `xpgains_lastExerciseInputs` | Last used weight/reps per exercise |
+| `xpgains_friends` | Friends list data |
+| `xpgains_set_history` | Detailed set records with timestamps (v0.4) |
+| `xpgains_lang` | Language code, e.g., "en", "de", "ru" (v0.4) |
+| `xpgains_theme` | Theme name: "classic" or "alt" (v0.4) |
+| `xpgains_intro_dismissed` | "1" if intro modal dismissed (v0.4) |
+| `xpgains_training_plans` | Array of saved workout plans (v0.4) |
+| `xpgains_custom_exercises` | Array of user-created exercises (v0.4) |
+| `xpgains_equipment_mode` | "1" or "0" for equipment filtering (v0.4) |
+| `xpgains_equipment` | Array of available equipment IDs (v0.4) |
 
 ---
 
@@ -70,10 +162,12 @@ The app rewards users with XP for logging workout sets, calculated based on weig
 
 ```
 G:\XPGains\XPGains ClaudeCode\
-├── index.html          # Main HTML structure (111 lines)
-├── app.js              # UI components, state management, event handlers (~1100 lines)
-├── data.js             # Skills, exercises, subcategories, XP formulas (~600 lines)
-├── styles.css          # OSRS-inspired styling with CSS variables (~1270 lines)
+├── index.html          # Main HTML structure (~230 lines)
+├── app.js              # UI components, state management, event handlers (~3500+ lines)
+├── data.js             # Skills, exercises, subcategories, XP formulas, spillover (~800 lines)
+├── styles.css          # OSRS-inspired styling with CSS variables (~2000+ lines)
+├── translations.js     # i18n dictionaries for 15 languages (~700 lines)
+├── manifest.json       # PWA manifest for mobile installation
 ├── CLAUDE.md           # This file
 │
 ├── assets/
@@ -106,18 +200,28 @@ G:\XPGains\XPGains ClaudeCode\
 
 | Module | Purpose |
 |--------|---------|
-| `AppState` | Global state object (skillXp, favorites, logEntries, settings, training, challenge) |
-| `Storage` | localStorage save/load/reset operations |
+| `AppState` | Global state object (skillXp, favorites, logEntries, settings, training, challenge, lastExerciseInputs, friends, setHistory) |
+| `Storage` | localStorage save/load/reset operations (expanded for v0.4 keys) |
 | `Units` | Weight conversion and display helpers (kg/lbs) |
+| `XpBarColors` | Color interpolation for XP progress bars (red→green gradient) |
 | `Navigation` | Tab switching between screens |
-| `StatsCard` | Renders the 5x3 skill grid |
+| `StatsCard` | Renders the 5x3 skill grid + Total Level tile |
 | `SkillDetail` | Modal showing skill level, XP, progress bar |
-| `LogScreen` | Renders training history grouped by day |
-| `MuscleMap` | Renders interactive SVG body diagram |
-| `TrainingFlow` | Multi-step exercise selection and XP tick |
+| `LogScreen` | Renders training history grouped by day + Undo functionality |
+| `MuscleMap` | Renders interactive SVG body diagram + action buttons |
+| `TrainingFlow` | Multi-step exercise selection and XP tick (with spillover) |
 | `ChallengesScreen` | Random workout quest generator |
-| `SettingsScreen` | User preferences UI |
+| `FriendsScreen` | Friends list, sharing, search, pagination, favorites |
+| `SettingsScreen` | User preferences UI (language, theme, equipment mode) |
+| `CalibrationModal` | Manual skill level setting for migration |
 | `Modal` | Generic modal show/hide system |
+| `i18n` | Internationalization: t(), setLanguage(), detectLanguage(), applyRtl() |
+| `Theme` | Theme system: init(), apply(), set() |
+| `IntroModal` | First-time welcome modal with language selector |
+| `TrainingPlans` | Plan CRUD: create, edit, delete, run workout plans |
+| `CustomExercises` | Custom exercise CRUD with weight presets and custom XP |
+| `EquipmentFilter` | Equipment selection and exercise filtering |
+| `StatisticsModal` | Radar chart + muscle change statistics |
 
 ### data.js Contents
 
@@ -125,9 +229,11 @@ G:\XPGains\XPGains ClaudeCode\
 |----------|-------------|
 | `SKILLS` | Array of 14 muscle groups with id, name, icon, bodyRegion |
 | `SUBCATEGORIES` | 30 subcategories for exercise grouping (e.g., "Upper Chest", "Long Head") |
-| `EXERCISES` | 50+ exercises with type, weight config, reference weight |
+| `EXERCISES` | 48 exercises with type, weight config, reference weight, requiredEquipment |
 | `XP_CONFIG` | XP calculation parameters (base, growthRate, diminishing multipliers) |
 | `XP_TABLE` | Pre-calculated cumulative XP for each level |
+| `EXERCISE_SPILLOVER` | Mapping of compound exercises to secondary muscle XP percentages |
+| `EQUIPMENT_TYPES` | Array of 9 equipment categories for filtering |
 
 ### Key Functions in data.js
 - `xpForLevel(level)` - Total XP needed to reach a level
@@ -135,7 +241,9 @@ G:\XPGains\XPGains ClaudeCode\
 - `progressToNextLevel(xp)` - Percentage to next level
 - `calculateXpGain(...)` - Full XP calculation with all modifiers
 - `isSkillNeglected(skillId, logEntries)` - Check for neglect bonus eligibility
-- `getTotalLevel(skillXp)` - Sum of all skill levels
+- `getTotalLevel(skillXp)` - Sum of all skill levels (for Stats Card & Friends)
+- `getRandomSkills(count, region)` - Get random skills for challenges
+- `getRandomExercises(skillId, count)` - Get random exercises for challenges
 - `kgToLbs(kg)` / `lbsToKg(lbs)` - Unit conversion
 
 ---
@@ -220,14 +328,15 @@ calculateXpGain(10, 60, 'bench_press', 1, [], false)
 
 ## Known Issues & Limitations
 
-1. **No offline support** - Requires localStorage; no service worker
+1. **No offline support** - PWA manifest exists but no service worker for offline caching
 2. **Single device** - Data doesn't sync between devices
-3. **No data export** - Cannot backup or transfer data
-4. **No undo** - Accidental XP ticks cannot be reversed
-5. **Session-based diminishing** - Resets on page reload (recentSets not persisted)
-6. **No progressive overload tracking** - Weight/rep improvements shown in log but not emphasized
-7. **Fixed XP curve** - No way to adjust progression speed
-8. **No rest timer** - Must use external timer between sets
+3. **No data export** - Cannot backup or transfer data (Friends share feature is user-by-user)
+4. **Session-based diminishing** - Resets on page reload (recentSets not persisted)
+5. **No progressive overload tracking** - Weight/rep improvements shown in log but not emphasized
+6. **Fixed XP curve** - No way to adjust progression speed
+7. **No rest timer** - Must use external timer between sets
+8. **Partial translations** - Only German and Russian are complete; other 12 languages fall back to English
+9. **Flag emojis** - May show as text (e.g., "GB") on some systems without emoji fonts
 
 ---
 
@@ -235,7 +344,7 @@ calculateXpGain(10, 60, 'bench_press', 1, [], false)
 
 ### High Priority
 - [ ] Data export/import (JSON backup)
-- [ ] Undo last XP tick
+- [x] ~~Undo last XP tick~~ (Implemented in v0.3)
 - [ ] Persist recentSets across sessions
 - [ ] Rest timer between sets
 - [ ] Sound effects for level ups
@@ -244,15 +353,27 @@ calculateXpGain(10, 60, 'bench_press', 1, [], false)
 - [ ] Progressive overload highlights on Stats Card
 - [ ] Weekly/monthly XP graphs
 - [ ] Personal records tracking
-- [ ] Custom exercise creation
-- [ ] Workout templates/routines
+- [x] ~~Custom exercise creation~~ (Implemented in v0.4)
+- [x] ~~Workout templates/routines~~ (Training Plans in v0.4)
 
 ### Low Priority
-- [ ] PWA with offline support
+- [x] ~~PWA with offline support~~ (PWA manifest in v0.4, no service worker yet)
 - [ ] Cloud sync (optional account)
-- [ ] Social features (friends, leaderboards)
+- [x] ~~Social features (friends, leaderboards)~~ (Friends system in v0.3)
 - [ ] Achievement system
-- [ ] Dark/light theme toggle
+- [x] ~~Dark/light theme toggle~~ (Theme system in v0.4)
+
+### Completed in v0.4
+- [x] Internationalization (15 languages)
+- [x] OS language detection
+- [x] Theme system (Classic/Alternative)
+- [x] Intro modal for new users
+- [x] Training plan builder
+- [x] Custom exercises with weight presets
+- [x] Equipment filtering
+- [x] Spillover XP for compound exercises
+- [x] Statistics modal with radar chart
+- [x] Set history tracking for analytics
 
 ---
 
@@ -262,6 +383,8 @@ calculateXpGain(10, 60, 'bench_press', 1, [], false)
 1. **Every XP tick must:**
    - Award XP to exactly one parent muscle skill
    - Create one complete log entry
+   - Award spillover XP to secondary muscles (for compound exercises)
+   - Record to setHistory for statistics
    - Never award XP without logging
 
 2. **Weight storage:**
@@ -273,17 +396,26 @@ calculateXpGain(10, 60, 'bench_press', 1, [], false)
    - Designed for ~1,200-1,600 quality sets over 6-8 years
    - Do not modify `XP_CONFIG.base` or `XP_CONFIG.growthRate` without recalibrating
 
+4. **i18n system:**
+   - All user-facing strings must use `i18n.t('key')` calls
+   - Keys follow pattern: `category.subcategory.key`
+   - Missing translations fall back to English automatically
+
 ### Common Modification Points
-- **Add new exercise:** Add to `EXERCISES` array in data.js with weight config and reference weight
+- **Add new exercise:** Add to `EXERCISES` array in data.js with weight config, reference weight, and requiredEquipment
 - **Add new subcategory:** Add to `SUBCATEGORIES` array, link to skill via `skillId`
 - **Change XP balance:** Modify `XP_CONFIG` values in data.js
 - **Add new screen:** Create HTML section, add nav tab, add render function to module
+- **Add spillover:** Add exercise to `EXERCISE_SPILLOVER` mapping in data.js
+- **Add translation:** Add keys to all language objects in translations.js (at minimum add to `en`)
+- **Add new language:** Add to `I18N.languages` array and create translation object
 
 ### File Dependencies
 ```
 index.html
-  └── loads data.js first (defines SKILLS, EXERCISES, functions)
-  └── then loads app.js (uses data.js exports)
+  └── loads translations.js first (defines I18N object)
+  └── then loads data.js (defines SKILLS, EXERCISES, EXERCISE_SPILLOVER, functions)
+  └── then loads app.js (uses translations.js and data.js exports)
 ```
 
 ### Icon Mapping
@@ -301,9 +433,45 @@ back_erector → skill_erectors.png
 
 **Backup Location:** `G:\XPGains\backups\`
 - `v1/` - First backup
-- `v2/` - Current session backup (created at start of this session)
+- `v2/` - Previous session backup
+- `v3/` - Session backup (January 27, 2026)
+- `v4/` - Current v0.4 implementation (January 28, 2026)
 
 ---
 
-*Last updated: January 27, 2026*
+## Version History
+
+### v0.4 (January 28, 2026)
+- Added internationalization with 15 languages (German, Russian complete)
+- Added OS language auto-detection
+- Added theme system (Classic/Alternative)
+- Added intro modal with language selector
+- Added PWA manifest for mobile installation
+- Added training plan builder
+- Added custom exercise creation with weight presets
+- Added equipment filtering
+- Added spillover XP for compound exercises (silent awards)
+- Added statistics modal with SVG radar chart
+- Added set history tracking for analytics
+- Fixed muscle map responsive scaling
+- Added text wrapping for skill labels
+- Prevented browser auto-translation interference
+
+### v0.3 (January 27, 2026)
+- Added Friends system with sharing and favorites
+- Added undo functionality for log entries
+- Added calibration modal for skill migration
+
+### v0.2
+- Added challenges/quests system
+- Added XP toast notifications
+- Added neglected muscle bonus
+
+### v0.1
+- Initial release with core training flow
+- Muscle map, stats card, training log
+
+---
+
+*Last updated: January 28, 2026*
 *Created by: Claude Code*
