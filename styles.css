@@ -3486,10 +3486,10 @@ body {
    NEW USER ONBOARDING ANIMATIONS
    ============================================ */
 
-/* Text Glow Wave Animation for subtitle */
+/* Text Glow Wave Animation for subtitle - letter by letter highlight */
 @keyframes text-glow-wave {
   0% {
-    background-position: -200% center;
+    background-position: -100% center;
   }
   100% {
     background-position: 200% center;
@@ -3500,18 +3500,16 @@ body {
   background: linear-gradient(
     90deg,
     var(--text-secondary) 0%,
-    var(--text-secondary) 35%,
-    var(--text-primary) 45%,
+    var(--text-secondary) 48%,
     #fff 50%,
-    var(--text-primary) 55%,
-    var(--text-secondary) 65%,
+    var(--text-secondary) 52%,
     var(--text-secondary) 100%
   );
-  background-size: 200% 100%;
+  background-size: 300% 100%;
   background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  animation: text-glow-wave 2.5s ease-in-out infinite;
+  animation: text-glow-wave 5s linear infinite;
 }
 
 /* Alt theme glow colors */
@@ -3519,14 +3517,12 @@ body {
   background: linear-gradient(
     90deg,
     var(--text-secondary) 0%,
-    var(--text-secondary) 35%,
-    #a78bfa 45%,
+    var(--text-secondary) 48%,
     #fff 50%,
-    #a78bfa 55%,
-    var(--text-secondary) 65%,
+    var(--text-secondary) 52%,
     var(--text-secondary) 100%
   );
-  background-size: 200% 100%;
+  background-size: 300% 100%;
   background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;

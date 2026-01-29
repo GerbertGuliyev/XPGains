@@ -4039,18 +4039,14 @@ const OnboardingAnimations = {
   dashOffset: 0,
   fadeProgress: 0,
 
-  // Muscles to cycle through (mix of front and back)
+  // Muscles to cycle through (front view only - no auto-switching)
   muscleCycle: [
     { id: 'chest', view: 'front' },
     { id: 'biceps', view: 'front' },
     { id: 'quads', view: 'front' },
-    { id: 'back_lats', view: 'back' },
     { id: 'delts', view: 'front' },
-    { id: 'hamstrings', view: 'back' },
     { id: 'core', view: 'front' },
-    { id: 'glutes', view: 'back' },
-    { id: 'triceps', view: 'back' },
-    { id: 'calves', view: 'back' }
+    { id: 'forearms', view: 'front' }
   ],
 
   /**
@@ -4176,7 +4172,7 @@ const OnboardingAnimations = {
   },
 
   /**
-   * Draw animated outline effect on canvas
+   * Draw animated outline effect on canvas - subtle white trace
    */
   drawOutline(edgePixels, progress, fadeAlpha) {
     if (!this.outlineCanvas || edgePixels.length === 0) return;
@@ -4199,19 +4195,16 @@ const OnboardingAnimations = {
     // Calculate layout
     const layout = MuscleMap.getContainLayout(cw, ch, hitInfo.width, hitInfo.height);
 
-    // Theme-aware glow color
-    const isAltTheme = AppState.settings.theme === 'alt';
-    const glowColor = isAltTheme ? '#a855f7' : '#ff981f';
+    // Subtle white trace color
+    const traceColor = 'rgba(255, 255, 255, 0.6)';
 
-    // Apply fade
-    ctx.globalAlpha = fadeAlpha;
+    // Draw thin trace effect at each edge pixel
+    // Use every pixel for smoother line
+    const step = 1;
 
-    // Draw glow effect at each edge pixel
-    // Use a subset of pixels for performance (every 2nd pixel)
-    const step = 2;
-
-    // Create gradient for the "wave" effect
+    // Wave position for traveling light effect
     const wavePosition = (progress % 1);
+    const waveWidth = 0.15; // Narrow wave for subtle effect
 
     for (let i = 0; i < edgePixels.length; i += step) {
       const edge = edgePixels[i];
@@ -4223,24 +4216,17 @@ const OnboardingAnimations = {
       // Calculate distance along the edge (normalized 0-1)
       const normalizedIndex = i / edgePixels.length;
 
-      // Create traveling wave effect
+      // Create traveling wave effect - thin and subtle
       const waveDistance = Math.abs(normalizedIndex - wavePosition);
       const wrappedDistance = Math.min(waveDistance, 1 - waveDistance);
-      const intensity = Math.max(0, 1 - wrappedDistance * 4);
+      const intensity = Math.max(0, 1 - wrappedDistance / waveWidth);
 
-      if (intensity > 0.1) {
-        // Draw glowing dot
+      if (intensity > 0.05) {
+        // Draw thin trace point
         ctx.beginPath();
-        ctx.arc(cx, cy, 2 + intensity * 2, 0, Math.PI * 2);
-        ctx.fillStyle = glowColor;
-        ctx.globalAlpha = fadeAlpha * intensity * 0.8;
-        ctx.fill();
-
-        // Add outer glow
-        ctx.beginPath();
-        ctx.arc(cx, cy, 4 + intensity * 4, 0, Math.PI * 2);
-        ctx.fillStyle = glowColor;
-        ctx.globalAlpha = fadeAlpha * intensity * 0.3;
+        ctx.arc(cx, cy, 0.8, 0, Math.PI * 2);
+        ctx.fillStyle = traceColor;
+        ctx.globalAlpha = fadeAlpha * intensity * 0.4;
         ctx.fill();
       }
     }
@@ -4254,28 +4240,19 @@ const OnboardingAnimations = {
   startMuscleOutlineAnimation() {
     if (!this.active) return;
 
-    let lastTime = 0;
-    const cycleDuration = 3500; // 3.5 seconds per muscle
-    const fadeDuration = 500; // 0.5s fade in/out
+    const cycleDuration = 4000; // 4 seconds per muscle
+    const fadeDuration = 600; // 0.6s fade in/out
     let cycleStartTime = performance.now();
     let currentEdges = [];
-    let targetView = this.muscleCycle[0].view;
 
-    // Initial edge extraction
+    // Initial edge extraction - always use current view (front by default)
     const loadCurrentMuscle = () => {
       const muscle = this.muscleCycle[this.currentMuscleIndex];
-      targetView = muscle.view;
+      const currentView = MuscleMap.currentView;
 
-      // Switch view if needed
-      if (MuscleMap.currentView !== targetView) {
-        MuscleMap.setView(targetView);
-      }
-
-      // Wait a bit for view to switch, then extract edges
-      setTimeout(() => {
-        currentEdges = this.extractEdgePixels(muscle.id, targetView);
-        console.log(`OnboardingAnimations: Highlighting ${muscle.id} (${currentEdges.length} edge pixels)`);
-      }, targetView !== MuscleMap.currentView ? 100 : 0);
+      // Extract edges for current view
+      currentEdges = this.extractEdgePixels(muscle.id, currentView);
+      console.log(`OnboardingAnimations: Highlighting ${muscle.id} (${currentEdges.length} edge pixels)`);
     };
 
     loadCurrentMuscle();
@@ -4297,11 +4274,11 @@ const OnboardingAnimations = {
       }
       fadeAlpha = Math.max(0, Math.min(1, fadeAlpha));
 
-      // Calculate wave progress (0 to 1 over the cycle)
+      // Calculate wave progress (0 to 1 over the cycle) - slower trace
       const waveProgress = (elapsed % cycleDuration) / cycleDuration;
 
       // Draw the outline
-      this.drawOutline(currentEdges, waveProgress * 2, fadeAlpha);
+      this.drawOutline(currentEdges, waveProgress, fadeAlpha);
 
       // Check if we need to move to next muscle
       if (elapsed >= cycleDuration) {

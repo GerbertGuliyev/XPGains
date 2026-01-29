@@ -39,7 +39,7 @@ const I18N = {
 
       // Muscle Map Screen
       'muscle_map.title': 'Muscle Map',
-      'muscle_map.subtitle': 'Select a muscle to train',
+      'muscle_map.subtitle': 'Select a muscle to train and begin leveling up',
       'muscle_map.create_plan': 'Create Training Plan',
       'muscle_map.add_custom_exercise': 'Add Custom Exercise',
       'muscle_map.statistics': 'Statistics',
@@ -264,7 +264,7 @@ const I18N = {
 
       // Muscle Map Screen
       'muscle_map.title': 'Muskelkarte',
-      'muscle_map.subtitle': 'Wähle einen Muskel zum Trainieren',
+      'muscle_map.subtitle': 'Wähle einen Muskel und beginne zu leveln',
       'muscle_map.create_plan': 'Trainingsplan erstellen',
       'muscle_map.add_custom_exercise': 'Eigene Übung hinzufügen',
       'muscle_map.statistics': 'Statistiken',
@@ -491,7 +491,7 @@ const I18N = {
 
       // Muscle Map Screen
       'muscle_map.title': 'Обзор Мышц',
-      'muscle_map.subtitle': 'Выберите мышцу для тренировки',
+      'muscle_map.subtitle': 'Выберите мышцу и начните прокачку',
       'muscle_map.create_plan': 'Создать план тренировки',
       'muscle_map.add_custom_exercise': 'Добавить своё упражнение',
       'muscle_map.statistics': 'Статистика',
