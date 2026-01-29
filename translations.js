@@ -132,7 +132,7 @@ const I18N = {
       'settings.apply_language': 'Apply',
       'settings.theme': 'Theme',
       'settings.theme_classic': 'Classic',
-      'settings.theme_alt': 'Alternative',
+      'settings.theme_alt': 'Mithril',
       'settings.calibration': 'Calibration',
       'settings.calibrate_skills': 'Calibrate Skills',
       'settings.calibrate_info': 'Manually set skill levels if you\'re migrating from another tracker.',
@@ -171,12 +171,11 @@ const I18N = {
 
       // Intro Modal
       'intro.title': 'Welcome to XPGains!',
-      'intro.subtitle': 'XPGains helps you track your workouts by turning each muscle into a levelable skill with visible progress.',
-      'intro.step1': '1. Tap a muscle on the Muscle Map to start training',
-      'intro.step2': '2. Select an exercise and log your sets',
-      'intro.step3': '3. Earn XP and level up your 14 muscle skills',
-      'intro.step4': '4. Track your progress and complete challenges',
-      'intro.got_it': 'Got it',
+      'intro.subtitle': 'XPGains helps you track your workouts by turning each muscle into a levelable skill',
+      'intro.step1': 'Select a muscle to train',
+      'intro.step2': 'Earn XP by completing exercises',
+      'intro.step3': 'Level up and track your progress',
+      'intro.got_it': 'Get Started',
 
       // Statistics Modal
       'stats.title': 'Statistics',
@@ -347,8 +346,8 @@ const I18N = {
       'settings.language': 'Sprache',
       'settings.apply_language': 'Anwenden',
       'settings.theme': 'Design',
-      'settings.theme_classic': 'Klassisch',
-      'settings.theme_alt': 'Alternativ',
+      'settings.theme_classic': 'Classic',
+      'settings.theme_alt': 'Mithril',
       'settings.calibration': 'Kalibrierung',
       'settings.calibrate_skills': 'Skills kalibrieren',
       'settings.calibrate_info': 'Setze Skill-Stufen manuell, wenn du von einem anderen Tracker wechselst.',
@@ -387,12 +386,11 @@ const I18N = {
 
       // Intro Modal
       'intro.title': 'Willkommen bei XPGains!',
-      'intro.subtitle': 'XPGains hilft dir, deine Workouts zu verfolgen, indem jeder Muskel zu einem levelbaren Skill mit sichtbarem Fortschritt wird.',
-      'intro.step1': '1. Tippe auf einen Muskel in der Muskelkarte',
-      'intro.step2': '2. Wähle eine Übung und protokolliere deine Sätze',
-      'intro.step3': '3. Verdiene XP und steigere deine 14 Muskel-Skills',
-      'intro.step4': '4. Verfolge deinen Fortschritt und meistere Herausforderungen',
-      'intro.got_it': 'Verstanden',
+      'intro.subtitle': 'XPGains hilft dir, deine Workouts zu verfolgen, indem jeder Muskel zu einem levelbaren Skill wird',
+      'intro.step1': 'Wähle einen Muskel zum Trainieren',
+      'intro.step2': 'Verdiene XP durch abgeschlossene Übungen',
+      'intro.step3': 'Steige auf und verfolge deinen Fortschritt',
+      'intro.got_it': 'Los geht\'s',
 
       // Statistics Modal
       'stats.title': 'Statistiken',
@@ -484,15 +482,15 @@ const I18N = {
     // Russian
     ru: {
       // Navigation
-      'nav.muscle_map': 'Карта мышц',
+      'nav.muscle_map': 'Обзор Мышц',
       'nav.stats_card': 'Характеристики',
       'nav.log': 'Журнал',
-      'nav.challenges': 'Испытания',
+      'nav.challenges': 'Задачи',
       'nav.friends': 'Друзья',
       'nav.settings': 'Настройки',
 
       // Muscle Map Screen
-      'muscle_map.title': 'Карта мышц',
+      'muscle_map.title': 'Обзор Мышц',
       'muscle_map.subtitle': 'Выберите мышцу для тренировки',
       'muscle_map.create_plan': 'Создать план тренировки',
       'muscle_map.add_custom_exercise': 'Добавить своё упражнение',
@@ -540,7 +538,7 @@ const I18N = {
       'log.spillover': '+{xp} XP {skill}',
 
       // Challenges Screen
-      'challenges.title': 'Испытания',
+      'challenges.title': 'Задачи',
       'challenges.workout_quest': 'Квест тренировки',
       'challenges.body_focus': 'Фокус на теле',
       'challenges.full_random': 'Полностью случайно',
@@ -575,8 +573,8 @@ const I18N = {
       'settings.language': 'Язык',
       'settings.apply_language': 'Применить',
       'settings.theme': 'Тема',
-      'settings.theme_classic': 'Классическая',
-      'settings.theme_alt': 'Альтернативная',
+      'settings.theme_classic': 'Classic',
+      'settings.theme_alt': 'Mithril',
       'settings.calibration': 'Калибровка',
       'settings.calibrate_skills': 'Калибровать навыки',
       'settings.calibrate_info': 'Установите уровни навыков вручную при переходе с другого трекера.',
@@ -615,12 +613,11 @@ const I18N = {
 
       // Intro Modal
       'intro.title': 'Добро пожаловать в XPGains!',
-      'intro.subtitle': 'XPGains помогает отслеживать тренировки, превращая каждую мышцу в прокачиваемый уровень с наглядным прогрессом.',
-      'intro.step1': '1. Выберите мышцу',
-      'intro.step2': '2. Выберите упражнение и фиксируйте подходы',
-      'intro.step3': '3. Зарабатывайте XP и повышайте уровни 14 разных мышц',
-      'intro.step4': '4. Отслеживайте свой прогресс',
-      'intro.got_it': 'Понятно',
+      'intro.subtitle': 'XPGains помогает отслеживать тренировки, превращая каждую мышцу в прокачиваемый навык',
+      'intro.step1': 'Выберите мышцу для тренировки',
+      'intro.step2': 'Зарабатывайте XP за выполнение упражнений',
+      'intro.step3': 'Повышайте уровень и отслеживайте прогресс',
+      'intro.got_it': 'Начать',
 
       // Statistics Modal
       'stats.title': 'Статистика',

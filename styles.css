@@ -170,24 +170,24 @@
   color: #FFFFFF;
 }
 
-/* Desaturate skill icons in alt theme - DEFAULT state (high specificity) */
+/* Desaturate skill icons in Mithril theme - DEFAULT state (high specificity) */
 [data-theme="alt"] .tile-icon .skill-icon-img,
 [data-theme="alt"] .skill-detail-icon .skill-icon-img,
 [data-theme="alt"] .calibration-skill-info .skill-icon-img {
   filter:
-    grayscale(0.85)
-    saturate(0.25)
+    grayscale(0.5)
+    saturate(0.5)
     brightness(1.05)
     contrast(1.05)
     drop-shadow(0 0 1px rgba(200, 200, 220, 0.4))
     drop-shadow(1px 1px 2px rgba(0, 0, 0, 0.5)) !important;
 }
 
-/* Hover state - slightly more saturated */
+/* Hover state - more saturated */
 [data-theme="alt"] .skill-tile:hover .tile-icon .skill-icon-img {
   filter:
-    grayscale(0.55)
-    saturate(0.55)
+    grayscale(0.25)
+    saturate(0.75)
     brightness(1.12)
     contrast(1.08)
     drop-shadow(0 0 2px rgba(200, 200, 220, 0.6))
@@ -1082,17 +1082,36 @@ body {
 }
 
 .intro-steps {
-  text-align: left;
+  text-align: center;
   margin-bottom: var(--spacing-xl);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
 }
 
 .intro-step {
-  padding: var(--spacing-md);
-  margin-bottom: var(--spacing-sm);
+  padding: var(--spacing-md) var(--spacing-lg);
   background: var(--bg-dark);
   border-radius: 4px;
   color: var(--text-light);
+  font-size: 15px;
+}
+
+.intro-theme-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-xl);
+}
+
+.intro-theme-label {
+  color: var(--text-secondary);
   font-size: 14px;
+}
+
+#intro-modal {
+  background: rgba(0, 0, 0, 1);
 }
 
 .intro-btn {

@@ -460,16 +460,23 @@ const IntroModal = {
    */
   show() {
     const content = document.getElementById('intro-content');
+    const isAltTheme = AppState.settings.theme === 'alt';
     content.innerHTML = `
       <div class="intro-modal-content">
         ${this.buildLanguageSelector()}
         <h2 class="intro-title">${i18n.t('intro.title')}</h2>
         <p class="intro-subtitle">${i18n.t('intro.subtitle')}</p>
         <div class="intro-steps">
-          <p>${i18n.t('intro.step1')}</p>
-          <p>${i18n.t('intro.step2')}</p>
-          <p>${i18n.t('intro.step3')}</p>
-          <p>${i18n.t('intro.step4')}</p>
+          <p class="intro-step">${i18n.t('intro.step1')}</p>
+          <p class="intro-step">${i18n.t('intro.step2')}</p>
+          <p class="intro-step">${i18n.t('intro.step3')}</p>
+        </div>
+        <div class="intro-theme-toggle">
+          <span class="intro-theme-label">${i18n.t('settings.theme')}</span>
+          <div class="toggle-group" id="intro-theme-toggle">
+            <button class="toggle-btn${!isAltTheme ? ' active' : ''}" data-value="classic">${i18n.t('settings.theme_classic')}</button>
+            <button class="toggle-btn${isAltTheme ? ' active' : ''}" data-value="alt">${i18n.t('settings.theme_alt')}</button>
+          </div>
         </div>
         <button class="xp-tick-btn intro-got-it-btn" id="intro-dismiss">${i18n.t('intro.got_it')}</button>
       </div>
@@ -482,6 +489,18 @@ const IntroModal = {
         i18n.setLanguage(e.target.value);
         // Re-show intro with new language
         this.show();
+      });
+    }
+
+    // Theme toggle handler
+    const themeGroup = content.querySelector('#intro-theme-toggle');
+    if (themeGroup) {
+      themeGroup.querySelectorAll('.toggle-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          themeGroup.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          Theme.set(btn.dataset.value);
+        });
       });
     }
 
