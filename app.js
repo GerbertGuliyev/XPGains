@@ -4245,7 +4245,7 @@ const OnboardingAnimations = {
     // Draw metallic shine fill effect first (behind outline)
     if (muscleMask && muscleMask.pixels.length > 0) {
       const bounds = muscleMask.bounds;
-      const shineWidth = 0.25; // Width of shine band
+      const shineWidth = 0.35; // Wider shine band for slower pass
 
       // Sample pixels for performance (every 3rd pixel)
       for (let i = 0; i < muscleMask.pixels.length; i += 3) {
@@ -4264,11 +4264,11 @@ const OnboardingAnimations = {
           const cx = layout.offsetX + (pixel.x / hitInfo.width) * layout.drawW;
           const cy = layout.offsetY + (pixel.y / hitInfo.height) * layout.drawH;
 
-          // Draw subtle shine pixel
+          // Draw very subtle shine pixel
           ctx.beginPath();
           ctx.arc(cx, cy, 1.2, 0, Math.PI * 2);
           ctx.fillStyle = 'rgba(255, 255, 255, 1)';
-          ctx.globalAlpha = fadeAlpha * shineIntensity * 0.15;
+          ctx.globalAlpha = fadeAlpha * shineIntensity * 0.06;
           ctx.fill();
         }
       }
@@ -4298,7 +4298,7 @@ const OnboardingAnimations = {
           ctx.beginPath();
           ctx.arc(cx, cy, 1, 0, Math.PI * 2);
           ctx.fillStyle = 'rgba(255, 255, 255, 1)';
-          ctx.globalAlpha = fadeAlpha * intensity * 0.5;
+          ctx.globalAlpha = fadeAlpha * intensity * 0.42;
           ctx.fill();
         }
       }
@@ -4320,8 +4320,8 @@ const OnboardingAnimations = {
   startMuscleOutlineAnimation() {
     if (!this.active) return;
 
-    const cycleDuration = 4000; // 4 seconds per muscle
-    const fadeDuration = 600; // 0.6s fade in/out
+    const cycleDuration = 6000; // 6 seconds per muscle (slower)
+    const fadeDuration = 800; // 0.8s fade in/out
     let cycleStartTime = performance.now();
     let currentEdges = [];
     let currentMask = null;
