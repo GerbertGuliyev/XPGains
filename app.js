@@ -1316,7 +1316,9 @@ const MuscleMap = {
   },
 
   handleClick(e) {
-    const muscleId = this.getMuscleAtPoint(e, this.debugMode);
+    const muscleId = this.getMuscleAtPoint(e, true); // Always log for debugging
+
+    console.log('MuscleMap: handleClick - muscleId:', muscleId);
 
     if (muscleId) {
       this.selectedMuscle = muscleId;
@@ -1324,7 +1326,14 @@ const MuscleMap = {
       this.showLabel(muscleId);
 
       // Start training flow
-      TrainingFlow.start(muscleId);
+      console.log('MuscleMap: Calling TrainingFlow.start with:', muscleId);
+      try {
+        TrainingFlow.start(muscleId);
+      } catch (err) {
+        console.error('MuscleMap: TrainingFlow.start error:', err);
+      }
+    } else {
+      console.log('MuscleMap: No muscle detected at click position');
     }
   },
 
@@ -1535,6 +1544,17 @@ const MuscleMap = {
 // ============================================
 const TrainingFlow = {
   start(skillId) {
+    console.log('TrainingFlow.start called with skillId:', skillId);
+
+    // Verify the skill exists
+    const skill = getSkillById(skillId);
+    console.log('TrainingFlow: Found skill:', skill);
+
+    if (!skill) {
+      console.error('TrainingFlow: No skill found for ID:', skillId);
+      return;
+    }
+
     AppState.training = {
       skillId: skillId,
       subcategoryId: null,
