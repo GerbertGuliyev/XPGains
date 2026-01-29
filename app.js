@@ -4038,16 +4038,11 @@ const OnboardingAnimations = {
   outlineCanvas: null,
   dashOffset: 0,
   fadeProgress: 0,
+  lastView: 'front',
 
-  // Muscles to cycle through (front view only - no auto-switching)
-  muscleCycle: [
-    { id: 'chest', view: 'front' },
-    { id: 'biceps', view: 'front' },
-    { id: 'quads', view: 'front' },
-    { id: 'delts', view: 'front' },
-    { id: 'core', view: 'front' },
-    { id: 'forearms', view: 'front' }
-  ],
+  // Muscles for each view (no auto-switching, respects user's view choice)
+  frontMuscles: ['chest', 'biceps', 'quads', 'delts', 'core', 'forearms'],
+  backMuscles: ['back_lats', 'back_erector', 'glutes', 'hamstrings', 'calves', 'traps'],
 
   /**
    * Check if user is new (Total Level = 14 means all skills at level 1)
@@ -4172,10 +4167,59 @@ const OnboardingAnimations = {
   },
 
   /**
-   * Draw animated outline effect on canvas - subtle white trace
+   * Extract full muscle mask pixels for shine fill effect
+   * Returns object with bounds and mask data
    */
-  drawOutline(edgePixels, progress, fadeAlpha) {
-    if (!this.outlineCanvas || edgePixels.length === 0) return;
+  extractMuscleMask(muscleId, view) {
+    const hitInfo = MuscleMap.hitData[view];
+    if (!hitInfo || !hitInfo.ctx) return null;
+
+    const mapping = MuscleMap.colorMap.find(m => m.id === muscleId);
+    if (!mapping) return null;
+
+    const w = hitInfo.width;
+    const h = hitInfo.height;
+    const imageData = hitInfo.ctx.getImageData(0, 0, w, h);
+    const data = imageData.data;
+    const tolerance = 2;
+    const tr = mapping.r, tg = mapping.g, tb = mapping.b;
+
+    // Find bounding box and collect all muscle pixels
+    let minX = w, maxX = 0, minY = h, maxY = 0;
+    const pixels = [];
+
+    for (let y = 0; y < h; y++) {
+      for (let x = 0; x < w; x++) {
+        const i = (y * w + x) * 4;
+        const r = data[i], g = data[i + 1], b = data[i + 2], a = data[i + 3];
+        if (a > 0 &&
+            Math.abs(r - tr) <= tolerance &&
+            Math.abs(g - tg) <= tolerance &&
+            Math.abs(b - tb) <= tolerance) {
+          pixels.push({ x, y });
+          minX = Math.min(minX, x);
+          maxX = Math.max(maxX, x);
+          minY = Math.min(minY, y);
+          maxY = Math.max(maxY, y);
+        }
+      }
+    }
+
+    if (pixels.length === 0) return null;
+
+    return {
+      pixels,
+      bounds: { minX, maxX, minY, maxY },
+      width: w,
+      height: h
+    };
+  },
+
+  /**
+   * Draw animated outline and metallic shine effect
+   */
+  drawOutline(edgePixels, muscleMask, progress, fadeAlpha) {
+    if (!this.outlineCanvas) return;
 
     const viewport = document.getElementById('muscle-map-viewport');
     const hitInfo = MuscleMap.hitData[MuscleMap.currentView];
@@ -4195,43 +4239,79 @@ const OnboardingAnimations = {
     // Calculate layout
     const layout = MuscleMap.getContainLayout(cw, ch, hitInfo.width, hitInfo.height);
 
-    // Subtle white trace color
-    const traceColor = 'rgba(255, 255, 255, 0.6)';
+    // Wave position for traveling shine effect
+    const wavePosition = progress % 1;
 
-    // Draw thin trace effect at each edge pixel
-    // Use every pixel for smoother line
-    const step = 1;
+    // Draw metallic shine fill effect first (behind outline)
+    if (muscleMask && muscleMask.pixels.length > 0) {
+      const bounds = muscleMask.bounds;
+      const shineWidth = 0.25; // Width of shine band
 
-    // Wave position for traveling light effect
-    const wavePosition = (progress % 1);
-    const waveWidth = 0.15; // Narrow wave for subtle effect
+      // Sample pixels for performance (every 3rd pixel)
+      for (let i = 0; i < muscleMask.pixels.length; i += 3) {
+        const pixel = muscleMask.pixels[i];
 
-    for (let i = 0; i < edgePixels.length; i += step) {
-      const edge = edgePixels[i];
+        // Calculate normalized X position within muscle bounds
+        const normalizedX = (pixel.x - bounds.minX) / (bounds.maxX - bounds.minX);
 
-      // Convert to canvas coordinates
-      const cx = layout.offsetX + (edge.x / hitInfo.width) * layout.drawW;
-      const cy = layout.offsetY + (edge.y / hitInfo.height) * layout.drawH;
+        // Calculate shine intensity based on wave position
+        const distFromWave = Math.abs(normalizedX - wavePosition);
+        const wrappedDist = Math.min(distFromWave, 1 - distFromWave);
+        const shineIntensity = Math.max(0, 1 - wrappedDist / shineWidth);
 
-      // Calculate distance along the edge (normalized 0-1)
-      const normalizedIndex = i / edgePixels.length;
+        if (shineIntensity > 0.05) {
+          // Convert to canvas coordinates
+          const cx = layout.offsetX + (pixel.x / hitInfo.width) * layout.drawW;
+          const cy = layout.offsetY + (pixel.y / hitInfo.height) * layout.drawH;
 
-      // Create traveling wave effect - thin and subtle
-      const waveDistance = Math.abs(normalizedIndex - wavePosition);
-      const wrappedDistance = Math.min(waveDistance, 1 - waveDistance);
-      const intensity = Math.max(0, 1 - wrappedDistance / waveWidth);
+          // Draw subtle shine pixel
+          ctx.beginPath();
+          ctx.arc(cx, cy, 1.2, 0, Math.PI * 2);
+          ctx.fillStyle = 'rgba(255, 255, 255, 1)';
+          ctx.globalAlpha = fadeAlpha * shineIntensity * 0.15;
+          ctx.fill();
+        }
+      }
+    }
 
-      if (intensity > 0.05) {
-        // Draw thin trace point
-        ctx.beginPath();
-        ctx.arc(cx, cy, 0.8, 0, Math.PI * 2);
-        ctx.fillStyle = traceColor;
-        ctx.globalAlpha = fadeAlpha * intensity * 0.4;
-        ctx.fill();
+    // Draw thin outline trace effect
+    if (edgePixels.length > 0) {
+      const outlineWaveWidth = 0.12;
+
+      for (let i = 0; i < edgePixels.length; i++) {
+        const edge = edgePixels[i];
+
+        // Convert to canvas coordinates
+        const cx = layout.offsetX + (edge.x / hitInfo.width) * layout.drawW;
+        const cy = layout.offsetY + (edge.y / hitInfo.height) * layout.drawH;
+
+        // Calculate distance along the edge (normalized 0-1)
+        const normalizedIndex = i / edgePixels.length;
+
+        // Create traveling wave effect
+        const waveDistance = Math.abs(normalizedIndex - wavePosition);
+        const wrappedDistance = Math.min(waveDistance, 1 - waveDistance);
+        const intensity = Math.max(0, 1 - wrappedDistance / outlineWaveWidth);
+
+        if (intensity > 0.05) {
+          // Draw thin trace point
+          ctx.beginPath();
+          ctx.arc(cx, cy, 1, 0, Math.PI * 2);
+          ctx.fillStyle = 'rgba(255, 255, 255, 1)';
+          ctx.globalAlpha = fadeAlpha * intensity * 0.5;
+          ctx.fill();
+        }
       }
     }
 
     ctx.globalAlpha = 1;
+  },
+
+  /**
+   * Get muscles for current view
+   */
+  getMusclesForView(view) {
+    return view === 'front' ? this.frontMuscles : this.backMuscles;
   },
 
   /**
@@ -4244,15 +4324,19 @@ const OnboardingAnimations = {
     const fadeDuration = 600; // 0.6s fade in/out
     let cycleStartTime = performance.now();
     let currentEdges = [];
+    let currentMask = null;
+    this.lastView = MuscleMap.currentView;
 
-    // Initial edge extraction - always use current view (front by default)
+    // Load muscle data for current view
     const loadCurrentMuscle = () => {
-      const muscle = this.muscleCycle[this.currentMuscleIndex];
       const currentView = MuscleMap.currentView;
+      const muscles = this.getMusclesForView(currentView);
+      const muscleId = muscles[this.currentMuscleIndex % muscles.length];
 
-      // Extract edges for current view
-      currentEdges = this.extractEdgePixels(muscle.id, currentView);
-      console.log(`OnboardingAnimations: Highlighting ${muscle.id} (${currentEdges.length} edge pixels)`);
+      // Extract edges and mask for current view
+      currentEdges = this.extractEdgePixels(muscleId, currentView);
+      currentMask = this.extractMuscleMask(muscleId, currentView);
+      console.log(`OnboardingAnimations: Highlighting ${muscleId} (${currentEdges.length} edge pixels, ${currentMask?.pixels.length || 0} fill pixels)`);
     };
 
     loadCurrentMuscle();
@@ -4261,6 +4345,14 @@ const OnboardingAnimations = {
       if (!this.active) {
         this.clearOutlineCanvas();
         return;
+      }
+
+      // Check if view changed - reload muscles for new view
+      if (MuscleMap.currentView !== this.lastView) {
+        this.lastView = MuscleMap.currentView;
+        this.currentMuscleIndex = 0;
+        cycleStartTime = timestamp;
+        loadCurrentMuscle();
       }
 
       const elapsed = timestamp - cycleStartTime;
@@ -4274,16 +4366,17 @@ const OnboardingAnimations = {
       }
       fadeAlpha = Math.max(0, Math.min(1, fadeAlpha));
 
-      // Calculate wave progress (0 to 1 over the cycle) - slower trace
+      // Calculate wave progress (0 to 1 over the cycle)
       const waveProgress = (elapsed % cycleDuration) / cycleDuration;
 
-      // Draw the outline
-      this.drawOutline(currentEdges, waveProgress, fadeAlpha);
+      // Draw the outline and shine effect
+      this.drawOutline(currentEdges, currentMask, waveProgress, fadeAlpha);
 
       // Check if we need to move to next muscle
       if (elapsed >= cycleDuration) {
         cycleStartTime = timestamp;
-        this.currentMuscleIndex = (this.currentMuscleIndex + 1) % this.muscleCycle.length;
+        const muscles = this.getMusclesForView(MuscleMap.currentView);
+        this.currentMuscleIndex = (this.currentMuscleIndex + 1) % muscles.length;
         loadCurrentMuscle();
       }
 
