@@ -1347,6 +1347,9 @@ const MuscleMap = {
     console.log('MuscleMap: handleClick - muscleId:', muscleId);
 
     if (muscleId) {
+      // Stop onboarding animations when user clicks a muscle
+      OnboardingAnimations.stop();
+
       this.selectedMuscle = muscleId;
       this.drawHighlight(muscleId);
       this.showLabel(muscleId);
@@ -3863,7 +3866,7 @@ const FriendsScreen = {
       name: sanitizedName,
       updatedAt: new Date().toISOString(),
       skills: {},
-      appVersion: '0.4'
+      appVersion: '0.07'
     };
 
     SKILLS.forEach(skill => {
@@ -4025,6 +4028,338 @@ const Modal = {
 };
 
 // ============================================
+// ONBOARDING ANIMATIONS (New User Effects)
+// ============================================
+const OnboardingAnimations = {
+  active: false,
+  animationFrameId: null,
+  muscleIntervalId: null,
+  currentMuscleIndex: 0,
+  outlineCanvas: null,
+  dashOffset: 0,
+  fadeProgress: 0,
+
+  // Muscles to cycle through (mix of front and back)
+  muscleCycle: [
+    { id: 'chest', view: 'front' },
+    { id: 'biceps', view: 'front' },
+    { id: 'quads', view: 'front' },
+    { id: 'back_lats', view: 'back' },
+    { id: 'delts', view: 'front' },
+    { id: 'hamstrings', view: 'back' },
+    { id: 'core', view: 'front' },
+    { id: 'glutes', view: 'back' },
+    { id: 'triceps', view: 'back' },
+    { id: 'calves', view: 'back' }
+  ],
+
+  /**
+   * Check if user is new (Total Level = 14 means all skills at level 1)
+   */
+  isNewUser() {
+    const totalLevel = getTotalLevel(AppState.skillXp);
+    return totalLevel === 14;
+  },
+
+  /**
+   * Initialize and start animations if user is new
+   */
+  init() {
+    if (!this.isNewUser()) {
+      return;
+    }
+
+    console.log('OnboardingAnimations: New user detected, starting animations');
+    this.active = true;
+
+    // Start text glow animation
+    this.startTextGlow();
+
+    // Wait for MuscleMap hit-masks to load, then start outline animation
+    setTimeout(() => {
+      this.createOutlineCanvas();
+      this.startMuscleOutlineAnimation();
+    }, 1000);
+  },
+
+  /**
+   * Add glow animation class to subtitle
+   */
+  startTextGlow() {
+    const subtitle = document.querySelector('#muscle-map-screen .screen-subtitle');
+    if (subtitle) {
+      subtitle.classList.add('animate-glow');
+    }
+  },
+
+  /**
+   * Remove glow animation class from subtitle
+   */
+  stopTextGlow() {
+    const subtitle = document.querySelector('#muscle-map-screen .screen-subtitle');
+    if (subtitle) {
+      subtitle.classList.remove('animate-glow');
+    }
+  },
+
+  /**
+   * Create the outline animation canvas
+   */
+  createOutlineCanvas() {
+    const viewport = document.getElementById('muscle-map-viewport');
+    if (!viewport) return;
+
+    // Check if canvas already exists
+    let canvas = document.getElementById('muscle-outline-canvas');
+    if (!canvas) {
+      canvas = document.createElement('canvas');
+      canvas.id = 'muscle-outline-canvas';
+      canvas.className = 'muscle-map-outline-canvas';
+      viewport.appendChild(canvas);
+    }
+    this.outlineCanvas = canvas;
+  },
+
+  /**
+   * Extract edge pixels from a muscle mask
+   * Returns array of {x, y} coordinates
+   */
+  extractEdgePixels(muscleId, view) {
+    const hitInfo = MuscleMap.hitData[view];
+    if (!hitInfo || !hitInfo.ctx) return [];
+
+    const mapping = MuscleMap.colorMap.find(m => m.id === muscleId);
+    if (!mapping) return [];
+
+    const w = hitInfo.width;
+    const h = hitInfo.height;
+    const imageData = hitInfo.ctx.getImageData(0, 0, w, h);
+    const data = imageData.data;
+    const tolerance = 2;
+    const tr = mapping.r, tg = mapping.g, tb = mapping.b;
+
+    // Create a boolean mask of the muscle
+    const mask = new Uint8Array(w * h);
+    for (let y = 0; y < h; y++) {
+      for (let x = 0; x < w; x++) {
+        const i = (y * w + x) * 4;
+        const r = data[i], g = data[i + 1], b = data[i + 2], a = data[i + 3];
+        if (a > 0 &&
+            Math.abs(r - tr) <= tolerance &&
+            Math.abs(g - tg) <= tolerance &&
+            Math.abs(b - tb) <= tolerance) {
+          mask[y * w + x] = 1;
+        }
+      }
+    }
+
+    // Find edge pixels (pixels that have at least one non-muscle neighbor)
+    const edges = [];
+    for (let y = 1; y < h - 1; y++) {
+      for (let x = 1; x < w - 1; x++) {
+        if (mask[y * w + x] === 1) {
+          // Check 4-connected neighbors
+          const hasEmptyNeighbor =
+            mask[(y - 1) * w + x] === 0 ||
+            mask[(y + 1) * w + x] === 0 ||
+            mask[y * w + (x - 1)] === 0 ||
+            mask[y * w + (x + 1)] === 0;
+
+          if (hasEmptyNeighbor) {
+            edges.push({ x, y });
+          }
+        }
+      }
+    }
+
+    return edges;
+  },
+
+  /**
+   * Draw animated outline effect on canvas
+   */
+  drawOutline(edgePixels, progress, fadeAlpha) {
+    if (!this.outlineCanvas || edgePixels.length === 0) return;
+
+    const viewport = document.getElementById('muscle-map-viewport');
+    const hitInfo = MuscleMap.hitData[MuscleMap.currentView];
+    if (!viewport || !hitInfo) return;
+
+    const rect = viewport.getBoundingClientRect();
+    const cw = rect.width;
+    const ch = rect.height;
+
+    // Set canvas size
+    this.outlineCanvas.width = cw;
+    this.outlineCanvas.height = ch;
+
+    const ctx = this.outlineCanvas.getContext('2d');
+    ctx.clearRect(0, 0, cw, ch);
+
+    // Calculate layout
+    const layout = MuscleMap.getContainLayout(cw, ch, hitInfo.width, hitInfo.height);
+
+    // Theme-aware glow color
+    const isAltTheme = AppState.settings.theme === 'alt';
+    const glowColor = isAltTheme ? '#a855f7' : '#ff981f';
+
+    // Apply fade
+    ctx.globalAlpha = fadeAlpha;
+
+    // Draw glow effect at each edge pixel
+    // Use a subset of pixels for performance (every 2nd pixel)
+    const step = 2;
+
+    // Create gradient for the "wave" effect
+    const wavePosition = (progress % 1);
+
+    for (let i = 0; i < edgePixels.length; i += step) {
+      const edge = edgePixels[i];
+
+      // Convert to canvas coordinates
+      const cx = layout.offsetX + (edge.x / hitInfo.width) * layout.drawW;
+      const cy = layout.offsetY + (edge.y / hitInfo.height) * layout.drawH;
+
+      // Calculate distance along the edge (normalized 0-1)
+      const normalizedIndex = i / edgePixels.length;
+
+      // Create traveling wave effect
+      const waveDistance = Math.abs(normalizedIndex - wavePosition);
+      const wrappedDistance = Math.min(waveDistance, 1 - waveDistance);
+      const intensity = Math.max(0, 1 - wrappedDistance * 4);
+
+      if (intensity > 0.1) {
+        // Draw glowing dot
+        ctx.beginPath();
+        ctx.arc(cx, cy, 2 + intensity * 2, 0, Math.PI * 2);
+        ctx.fillStyle = glowColor;
+        ctx.globalAlpha = fadeAlpha * intensity * 0.8;
+        ctx.fill();
+
+        // Add outer glow
+        ctx.beginPath();
+        ctx.arc(cx, cy, 4 + intensity * 4, 0, Math.PI * 2);
+        ctx.fillStyle = glowColor;
+        ctx.globalAlpha = fadeAlpha * intensity * 0.3;
+        ctx.fill();
+      }
+    }
+
+    ctx.globalAlpha = 1;
+  },
+
+  /**
+   * Start the muscle outline animation loop
+   */
+  startMuscleOutlineAnimation() {
+    if (!this.active) return;
+
+    let lastTime = 0;
+    const cycleDuration = 3500; // 3.5 seconds per muscle
+    const fadeDuration = 500; // 0.5s fade in/out
+    let cycleStartTime = performance.now();
+    let currentEdges = [];
+    let targetView = this.muscleCycle[0].view;
+
+    // Initial edge extraction
+    const loadCurrentMuscle = () => {
+      const muscle = this.muscleCycle[this.currentMuscleIndex];
+      targetView = muscle.view;
+
+      // Switch view if needed
+      if (MuscleMap.currentView !== targetView) {
+        MuscleMap.setView(targetView);
+      }
+
+      // Wait a bit for view to switch, then extract edges
+      setTimeout(() => {
+        currentEdges = this.extractEdgePixels(muscle.id, targetView);
+        console.log(`OnboardingAnimations: Highlighting ${muscle.id} (${currentEdges.length} edge pixels)`);
+      }, targetView !== MuscleMap.currentView ? 100 : 0);
+    };
+
+    loadCurrentMuscle();
+
+    const animate = (timestamp) => {
+      if (!this.active) {
+        this.clearOutlineCanvas();
+        return;
+      }
+
+      const elapsed = timestamp - cycleStartTime;
+
+      // Calculate fade alpha (fade in at start, fade out at end)
+      let fadeAlpha = 1;
+      if (elapsed < fadeDuration) {
+        fadeAlpha = elapsed / fadeDuration;
+      } else if (elapsed > cycleDuration - fadeDuration) {
+        fadeAlpha = (cycleDuration - elapsed) / fadeDuration;
+      }
+      fadeAlpha = Math.max(0, Math.min(1, fadeAlpha));
+
+      // Calculate wave progress (0 to 1 over the cycle)
+      const waveProgress = (elapsed % cycleDuration) / cycleDuration;
+
+      // Draw the outline
+      this.drawOutline(currentEdges, waveProgress * 2, fadeAlpha);
+
+      // Check if we need to move to next muscle
+      if (elapsed >= cycleDuration) {
+        cycleStartTime = timestamp;
+        this.currentMuscleIndex = (this.currentMuscleIndex + 1) % this.muscleCycle.length;
+        loadCurrentMuscle();
+      }
+
+      this.animationFrameId = requestAnimationFrame(animate);
+    };
+
+    this.animationFrameId = requestAnimationFrame(animate);
+  },
+
+  /**
+   * Clear the outline canvas
+   */
+  clearOutlineCanvas() {
+    if (this.outlineCanvas) {
+      const ctx = this.outlineCanvas.getContext('2d');
+      ctx.clearRect(0, 0, this.outlineCanvas.width, this.outlineCanvas.height);
+    }
+  },
+
+  /**
+   * Stop all animations (called when user interacts)
+   */
+  stop() {
+    if (!this.active) return;
+
+    console.log('OnboardingAnimations: Stopping animations');
+    this.active = false;
+
+    // Stop text glow
+    this.stopTextGlow();
+
+    // Stop animation frame
+    if (this.animationFrameId) {
+      cancelAnimationFrame(this.animationFrameId);
+      this.animationFrameId = null;
+    }
+
+    // Clear muscle interval
+    if (this.muscleIntervalId) {
+      clearInterval(this.muscleIntervalId);
+      this.muscleIntervalId = null;
+    }
+
+    // Clear and remove outline canvas
+    this.clearOutlineCanvas();
+    if (this.outlineCanvas) {
+      this.outlineCanvas.remove();
+      this.outlineCanvas = null;
+    }
+  }
+};
+
+// ============================================
 // INITIALIZATION
 // ============================================
 document.addEventListener('DOMContentLoaded', () => {
@@ -4047,6 +4382,11 @@ document.addEventListener('DOMContentLoaded', () => {
   // Check if we should show intro modal
   IntroModal.checkAndShow();
 
+  // Initialize onboarding animations for new users (after a delay for hit-masks to load)
+  setTimeout(() => {
+    OnboardingAnimations.init();
+  }, 1500);
+
   // Check if there's an in-progress plan run to resume
   if (AppState.planRun && AppState.planRun.active) {
     setTimeout(() => {
@@ -4063,5 +4403,5 @@ document.addEventListener('DOMContentLoaded', () => {
   // Expose reset function globally for testing
   window.resetXPGains = Storage.reset.bind(Storage);
 
-  console.log('XPGains v0.4 initialized. Use resetXPGains() to clear all data.');
+  console.log('XPGains v0.07 initialized. Use resetXPGains() to clear all data.');
 });

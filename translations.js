@@ -145,7 +145,7 @@ const I18N = {
       'settings.reset_warning': 'This will delete all your progress and cannot be undone.',
       'settings.reset_confirm': 'Reset all XPGains data? This cannot be undone.',
       'settings.about': 'About',
-      'settings.version': 'XPGains v0.06 - Track your progress\n© 2026 Gerbert Guliyev. All rights reserved.',
+      'settings.version': 'XPGains v0.07 - Track your progress\n© 2026 Gerbert Guliyev. All rights reserved.',
 
       // Calibration Modal
       'calibration.title': 'Calibrate Skills',
@@ -360,7 +360,7 @@ const I18N = {
       'settings.reset_warning': 'Dies löscht deinen gesamten Fortschritt unwiderruflich.',
       'settings.reset_confirm': 'Alle XPGains-Daten zurücksetzen? Dies kann nicht rückgängig gemacht werden.',
       'settings.about': 'Über',
-      'settings.version': 'XPGains v0.06 - Track your progress\n© 2026 Gerbert Guliyev. All rights reserved.',
+      'settings.version': 'XPGains v0.07 - Track your progress\n© 2026 Gerbert Guliyev. All rights reserved.',
 
       // Calibration Modal
       'calibration.title': 'Skills kalibrieren',
@@ -587,7 +587,7 @@ const I18N = {
       'settings.reset_warning': 'Это удалит весь ваш прогресс без возможности восстановления.',
       'settings.reset_confirm': 'Сбросить все данные XPGains? Это нельзя отменить.',
       'settings.about': 'О приложении',
-      'settings.version': 'XPGains v0.06 - Track your progress\n© 2026 Gerbert Guliyev. All rights reserved.',
+      'settings.version': 'XPGains v0.07 - Track your progress\n© 2026 Gerbert Guliyev. All rights reserved.',
 
       // Calibration Modal
       'calibration.title': 'Калибровка навыков',

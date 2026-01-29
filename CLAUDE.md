@@ -6,14 +6,14 @@
 
 The app rewards users with XP for logging workout sets, calculated based on weight lifted, reps performed, and exercise type. The visual design mimics OSRS's distinctive aesthetic, including the characteristic skill card grid layout.
 
-**Current Version:** v0.6
+**Current Version:** v0.07
 
 ---
 
 ## Current Feature List
 
 ### Core Features
-- **Muscle Map** - Interactive SVG body diagram for selecting muscles to train
+- **Muscle Map** - Interactive PNG body diagram with hit-mask pixel sampling for accurate muscle selection
 - **Stats Card** - OSRS-style 5x3 grid displaying all 14 muscle skills with current/max levels + Total Level tile
 - **Training Flow** - Muscle selection → Exercise selection → Weight/Reps input → XP award
 - **Training Log** - Complete history of logged sets, grouped by day with XP totals
@@ -31,15 +31,18 @@ The app rewards users with XP for logging workout sets, calculated based on weig
 - **Dynamic UI Updates** - All text updates when language changes (requires Apply button)
 
 #### Theme System
-- **Classic Theme** - Original OSRS-inspired dark theme (default)
-- **Alternative Theme** - Light grey palette with desaturated skill icons
+- **Classic Theme** - Original OSRS-inspired dark theme (default for most languages)
+- **Mithril Theme** - Dark charcoal palette with purple accents and slightly desaturated skill icons
+- **Russian Default** - Mithril theme auto-selected for Russian browser language
 - **CSS Custom Properties** - Theme applied via `data-theme` attribute on `<html>`
 
 #### Intro Modal
 - **First-Time Welcome** - Shows for new users (Total Level = 14)
-- **Quick Start Guide** - Explains how to use the app
+- **Quick Start Guide** - 3 simple steps explaining how to use the app
 - **Language Selector** - Choose language with emoji flags before starting
-- **Dismissible** - "Got it" button sets `xpgains_intro_dismissed` flag
+- **Theme Toggle** - Choose Classic or Mithril theme directly in welcome screen
+- **Full Black Background** - Clean, focused presentation
+- **Dismissible** - "Get Started" button sets `xpgains_intro_dismissed` flag
 
 #### PWA Support
 - **manifest.json** - Enables "Add to Home Screen" on mobile
@@ -149,7 +152,7 @@ The app rewards users with XP for logging workout sets, calculated based on weig
 | Styling | Pure CSS with CSS Variables |
 | Icons | Custom PNG skill icons (14 muscles, 5 sizes each) |
 | Storage | Browser localStorage |
-| Graphics | Inline SVG for muscle map |
+| Graphics | PNG images with canvas hit-mask detection for muscle map |
 
 ### No External Dependencies
 - No npm packages
@@ -177,7 +180,10 @@ G:\XPGains\XPGains ClaudeCode\
 │   │   └── Alternative/               # Alt logo versions
 │   │
 │   ├── Muscle Map/
-│   │   └── muscle map new.jpeg        # Reference image
+│   │   ├── Muscle_Map_Front.png       # Visible front body image
+│   │   ├── Muscle_Map_Back.png        # Visible back body image
+│   │   ├── Muscle_Map_Front_Hit.png   # Color-coded hit-mask (front)
+│   │   └── Muscle_Map_Back_Hit.png    # Color-coded hit-mask (back)
 │   │
 │   └── Skill Card Icons/
 │       └── v9/XPGains/
@@ -209,7 +215,7 @@ G:\XPGains\XPGains ClaudeCode\
 | `StatsCard` | Renders the 5x3 skill grid + Total Level tile |
 | `SkillDetail` | Modal showing skill level, XP, progress bar |
 | `LogScreen` | Renders training history grouped by day + Undo functionality |
-| `MuscleMap` | Renders interactive SVG body diagram + action buttons |
+| `MuscleMap` | Renders interactive PNG body diagram with hit-mask pixel sampling |
 | `TrainingFlow` | Multi-step exercise selection and XP tick (with spillover) |
 | `ChallengesScreen` | Random workout quest generator |
 | `FriendsScreen` | Friends list, sharing, search, pagination, favorites |
@@ -436,13 +442,54 @@ back_erector → skill_erectors.png
 - `v1/` - First backup
 - `v2/` - Previous session backup
 - `v3/` - Session backup (January 27, 2026)
-- `v4/` - Current v0.4 implementation (January 28, 2026)
+- `v4/` - v0.4 implementation (January 28, 2026)
+- `v5/` - v0.5 implementation (January 28, 2026)
+- `v6/` - v0.06 implementation (January 29, 2026)
+- `v7/` - Current v0.07 implementation (January 29, 2026)
 
 ---
 
 ## Version History
 
-### v0.6 (January 28, 2026)
+### v0.07 (January 29, 2026)
+- **New User Onboarding Animations**:
+  - Text glow wave animation on "Select a muscle to train" subtitle
+  - Animated muscle outline effect cycles through random muscles
+  - Uses hit-mask edge detection to highlight muscle boundaries
+  - Traveling glow wave effect circles each muscle's outline
+  - Theme-aware colors (orange for Classic, purple for Mithril)
+  - 3.5-second cycle per muscle with fade transitions
+  - Auto-switches between front/back views to showcase different muscles
+  - Animations stop permanently when user clicks on any muscle
+  - Only activates for new users (Total Level = 14)
+
+### v0.06 (January 29, 2026)
+- **New Muscle Map System**:
+  - Replaced SVG polygon regions with PNG hit-mask pixel sampling
+  - Accurate muscle detection using color-coded hit-mask images
+  - Proper coordinate mapping for object-fit: contain layout
+  - Subtle highlight overlay (theme-aware: orange/purple)
+  - Front/Back toggle with separate hit-masks per view
+  - Click on empty space clears selection
+- **Theme Renamed**: "Alternative" → "Mithril"
+  - Theme names kept in English across all languages
+  - Increased icon saturation in Mithril theme (grayscale 0.5, saturate 0.5)
+- **Russian Language Improvements**:
+  - "Карта мышц" → "Обзор Мышц" (nav and title)
+  - "Испытания" → "Задачи" (challenges tab)
+  - Mithril theme auto-selected for Russian browser language
+- **Intro Modal Redesign**:
+  - Simplified to 3 steps without numbering
+  - Added theme toggle (Classic/Mithril) in welcome screen
+  - "Got it" → "Get Started" button text
+  - Full black background for cleaner presentation
+  - More spacing between instruction steps
+- **Settings Update**:
+  - Version: v0.06
+  - Tagline: "Track your progress"
+  - Added copyright: © 2026 Gerbert Guliyev. All rights reserved.
+
+### v0.05 (January 28, 2026)
 - **Log Entry Spillover XP Display**:
   - Moved passive/spillover XP from below exercise name to right side
   - Displayed in green with "XP" label and muscle name below
@@ -513,5 +560,6 @@ back_erector → skill_erectors.png
 
 ---
 
-*Last updated: January 28, 2026 (v0.6)*
+*Last updated: January 29, 2026 (v0.07)*
 *Created by: Claude Code*
+*© 2026 Gerbert Guliyev. All rights reserved.*
