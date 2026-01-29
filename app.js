@@ -381,8 +381,15 @@ const Theme = {
    * Initialize theme system
    */
   init() {
-    const savedTheme = localStorage.getItem(Storage.keys.theme) || 'classic';
-    this.apply(savedTheme);
+    const savedTheme = localStorage.getItem(Storage.keys.theme);
+    if (savedTheme) {
+      this.apply(savedTheme);
+    } else {
+      // Default to Mithril theme for Russian browser language
+      const browserLang = (navigator.language || navigator.userLanguage || 'en').split('-')[0].toLowerCase();
+      const defaultTheme = browserLang === 'ru' ? 'alt' : 'classic';
+      this.apply(defaultTheme);
+    }
   },
 
   /**
