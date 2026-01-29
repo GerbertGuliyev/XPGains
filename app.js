@@ -1334,6 +1334,10 @@ const MuscleMap = {
       }
     } else {
       console.log('MuscleMap: No muscle detected at click position');
+      // Clear selection and highlight when clicking empty space
+      this.selectedMuscle = null;
+      this.clearOverlay();
+      this.hideLabel();
     }
   },
 
@@ -1447,11 +1451,15 @@ const MuscleMap = {
     // Calculate layout for drawing mask aligned with visible image
     const layout = this.getContainLayout(cw, ch, hitInfo.width, hitInfo.height);
 
+    // Theme-aware highlight color: orange for classic, purple for alt
+    const isAltTheme = AppState.settings.theme === 'alt';
+    const highlightColor = isAltTheme ? '#a855f7' : '#ff981f';
+
     // Draw glow effect (blurred, colored)
     ctx.save();
     ctx.globalCompositeOperation = 'source-over';
     ctx.filter = 'blur(6px)';
-    ctx.globalAlpha = isHover ? 0.4 : 0.6;
+    ctx.globalAlpha = isHover ? 0.15 : 0.25;
 
     // Draw colored glow
     const tempCanvas = document.createElement('canvas');
@@ -1460,7 +1468,7 @@ const MuscleMap = {
     const tempCtx = tempCanvas.getContext('2d');
     tempCtx.drawImage(mask, 0, 0);
     tempCtx.globalCompositeOperation = 'source-in';
-    tempCtx.fillStyle = '#ff981f';
+    tempCtx.fillStyle = highlightColor;
     tempCtx.fillRect(0, 0, mask.width, mask.height);
 
     ctx.drawImage(tempCanvas, layout.offsetX, layout.offsetY, layout.drawW, layout.drawH);
@@ -1469,7 +1477,7 @@ const MuscleMap = {
     // Draw solid outline (crisp)
     ctx.save();
     ctx.filter = 'none';
-    ctx.globalAlpha = isHover ? 0.6 : 0.85;
+    ctx.globalAlpha = isHover ? 0.25 : 0.4;
     ctx.drawImage(tempCanvas, layout.offsetX, layout.offsetY, layout.drawW, layout.drawH);
     ctx.restore();
   },
@@ -1481,7 +1489,8 @@ const MuscleMap = {
     const skill = SKILLS.find(s => s.id === muscleId);
     if (!skill) return;
 
-    const level = XP.getLevel(muscleId);
+    const currentXp = AppState.skillXp[muscleId] || 0;
+    const level = levelFromXp(currentXp);
     const name = i18n.skillName(muscleId);
 
     label.innerHTML = `${name} <span class="label-level">(Lv ${level})</span>`;
