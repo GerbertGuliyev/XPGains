@@ -1455,13 +1455,7 @@ const MuscleMap = {
     const isAltTheme = AppState.settings.theme === 'alt';
     const highlightColor = isAltTheme ? '#a855f7' : '#ff981f';
 
-    // Draw glow effect (blurred, colored)
-    ctx.save();
-    ctx.globalCompositeOperation = 'source-over';
-    ctx.filter = 'blur(6px)';
-    ctx.globalAlpha = isHover ? 0.15 : 0.25;
-
-    // Draw colored glow
+    // Create colored mask
     const tempCanvas = document.createElement('canvas');
     tempCanvas.width = mask.width;
     tempCanvas.height = mask.height;
@@ -1471,13 +1465,9 @@ const MuscleMap = {
     tempCtx.fillStyle = highlightColor;
     tempCtx.fillRect(0, 0, mask.width, mask.height);
 
-    ctx.drawImage(tempCanvas, layout.offsetX, layout.offsetY, layout.drawW, layout.drawH);
-    ctx.restore();
-
-    // Draw solid outline (crisp)
+    // Draw single layer with low opacity
     ctx.save();
-    ctx.filter = 'none';
-    ctx.globalAlpha = isHover ? 0.25 : 0.4;
+    ctx.globalAlpha = isHover ? 0.15 : 0.25;
     ctx.drawImage(tempCanvas, layout.offsetX, layout.offsetY, layout.drawW, layout.drawH);
     ctx.restore();
   },
