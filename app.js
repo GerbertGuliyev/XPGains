@@ -1354,19 +1354,24 @@ const MuscleMap = {
       this.drawHighlight(muscleId);
       this.showLabel(muscleId);
 
-      // Start training flow
-      console.log('MuscleMap: Calling TrainingFlow.start with:', muscleId);
-      try {
-        TrainingFlow.start(muscleId);
-      } catch (err) {
-        console.error('MuscleMap: TrainingFlow.start error:', err);
-      }
+      // Delay before opening training flow so user sees the highlight
+      setTimeout(() => {
+        console.log('MuscleMap: Calling TrainingFlow.start with:', muscleId);
+        try {
+          TrainingFlow.start(muscleId);
+        } catch (err) {
+          console.error('MuscleMap: TrainingFlow.start error:', err);
+        }
+      }, 500);
     } else {
       console.log('MuscleMap: No muscle detected at click position');
       // Clear selection and highlight when clicking empty space
       this.selectedMuscle = null;
       this.clearOverlay();
       this.hideLabel();
+
+      // Restart onboarding animations if user is new
+      OnboardingAnimations.restart();
     }
   },
 
@@ -4426,6 +4431,28 @@ const OnboardingAnimations = {
       this.outlineCanvas.remove();
       this.outlineCanvas = null;
     }
+  },
+
+  /**
+   * Restart animations (called when user clicks empty space)
+   */
+  restart() {
+    // Only restart if user is still new
+    if (!this.isNewUser()) return;
+
+    // Don't restart if already active
+    if (this.active) return;
+
+    console.log('OnboardingAnimations: Restarting animations');
+    this.active = true;
+    this.currentMuscleIndex = 0;
+
+    // Start text glow animation
+    this.startTextGlow();
+
+    // Restart outline animation
+    this.createOutlineCanvas();
+    this.startMuscleOutlineAnimation();
   }
 };
 
