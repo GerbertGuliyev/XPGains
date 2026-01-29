@@ -13,13 +13,24 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="XPGains">
+  <meta name="mobile-web-app-capable" content="yes">
   <meta name="theme-color" content="#ff981f">
+  <meta name="msapplication-TileColor" content="#1a1a1a">
   <meta name="description" content="Train your muscles like an RPG hero">
 
-  <!-- PWA Icons -->
+  <!-- PWA Manifest -->
   <link rel="manifest" href="manifest.json">
+
+  <!-- iOS Home Screen Icons (multiple sizes for device compatibility) -->
+  <link rel="apple-touch-icon" href="assets/Logo/icon-180.png">
   <link rel="apple-touch-icon" sizes="180x180" href="assets/Logo/icon-180.png">
-  <link rel="icon" type="image/png" sizes="167x167" href="assets/Logo/icon-167.png">
+  <link rel="apple-touch-icon" sizes="167x167" href="assets/Logo/icon-167.png">
+  <link rel="apple-touch-icon" sizes="152x152" href="assets/Logo/icon-167.png">
+  <link rel="apple-touch-icon" sizes="120x120" href="assets/Logo/icon-120.png">
+
+  <!-- Standard favicons -->
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/Logo/icon-120.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="assets/Logo/icon-120.png">
 
   <link rel="stylesheet" href="styles.css">
 </head>
@@ -52,7 +63,19 @@
           <button class="back-btn muscle-map-action-btn" id="open-statistics">Statistics</button>
         </div>
         <div id="muscle-map-container" class="muscle-map-container">
-          <!-- SVG will be rendered here -->
+          <!-- Front/Back Toggle -->
+          <div class="muscle-map-toggle">
+            <button class="toggle-btn active" data-view="front" id="map-view-front">Front</button>
+            <button class="toggle-btn" data-view="back" id="map-view-back">Back</button>
+          </div>
+          <!-- Map Viewport -->
+          <div class="muscle-map-viewport" id="muscle-map-viewport">
+            <img id="muscle-map-visible" class="muscle-map-img" src="assets/Muscle%20Map/Muscle_Map_Front.png" alt="Muscle Map">
+            <canvas id="muscle-map-overlay" class="muscle-map-overlay"></canvas>
+            <canvas id="muscle-map-debug" class="muscle-map-debug"></canvas>
+          </div>
+          <!-- Selected Muscle Label -->
+          <div id="muscle-map-label" class="muscle-map-label" style="display: none;"></div>
         </div>
       </section>
 
@@ -166,6 +189,16 @@
           <button class="modal-close">&times;</button>
           <div id="statistics-content">
             <!-- Statistics and radar chart rendered by JS -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Muscle Graph Modal -->
+      <div id="muscle-graph-modal" class="modal">
+        <div class="modal-content muscle-graph-modal-content">
+          <button class="modal-close">&times;</button>
+          <div id="muscle-graph-content">
+            <!-- Performance graph rendered by JS -->
           </div>
         </div>
       </div>

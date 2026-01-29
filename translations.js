@@ -43,6 +43,8 @@ const I18N = {
       'muscle_map.create_plan': 'Create Training Plan',
       'muscle_map.add_custom_exercise': 'Add Custom Exercise',
       'muscle_map.statistics': 'Statistics',
+      'muscle_map.front': 'Front',
+      'muscle_map.back': 'Back',
 
       // Custom Exercise
       'custom.title': 'Add Custom Exercise',
@@ -78,12 +80,12 @@ const I18N = {
 
       // Log Screen
       'log.title': 'Training Log',
-      'log.empty': 'No training logged yet. Start training from the Muscle Map!',
+      'log.empty': 'Your log is currently empty. XP gained from performing sets will be shown here.',
       'log.undo': 'Undo',
       'log.undo_confirm': 'Undo this set? This will subtract {xp} XP from {skill}.',
       'log.weight_up': 'Weight up',
       'log.reps_up': 'Reps up',
-      'log.spillover': '+{xp} {skill}',
+      'log.spillover': '+{xp} XP {skill}',
 
       // Challenges Screen
       'challenges.title': 'Challenges',
@@ -174,7 +176,7 @@ const I18N = {
       'intro.step2': '2. Select an exercise and log your sets',
       'intro.step3': '3. Earn XP and level up your 14 muscle skills',
       'intro.step4': '4. Track your progress and complete challenges',
-      'intro.got_it': 'Got it!',
+      'intro.got_it': 'Got it',
 
       // Statistics Modal
       'stats.title': 'Statistics',
@@ -189,6 +191,7 @@ const I18N = {
       'stats.muscle_changes': 'Muscle Changes (7 days)',
       'stats.no_change': 'No change',
       'stats.sets_week': 'sets this week',
+      'stats.no_graph_data': 'No data yet for this muscle.',
 
       // Equipment
       'equipment.title': 'Select Your Equipment',
@@ -206,8 +209,8 @@ const I18N = {
       // Training Plans
       'plans.title': 'Training Plans',
       'plans.create': 'Create New Plan',
-      'plans.no_plans': 'No training plans yet.',
-      'plans.create_first': 'Create your first training plan!',
+      'plans.no_plans': 'You have not added any training plans yet.',
+      'plans.create_first': 'Follow the next steps to create a custom workout.',
       'plans.name_placeholder': 'Plan name (e.g., Push Day)',
       'plans.add_exercise': 'Add Exercise',
       'plans.sets': 'Sets',
@@ -218,6 +221,18 @@ const I18N = {
       'plans.run': 'Run Plan',
       'plans.edit': 'Edit',
       'plans.exercises_count': '{count} exercises',
+      'plans.exercise_progress': 'Exercise {current} of {total}',
+      'plans.set_progress': 'Set {done} / {target}',
+      'plans.prev_exercise': 'Previous',
+      'plans.next_exercise': 'Next',
+      'plans.finish': 'Finish',
+      'plans.exit_plan': 'Exit Plan',
+      'plans.exit_confirm': 'Exit this plan? Progress will be lost.',
+      'plans.skip_confirm': 'Skip exercise? Only {done}/{target} sets completed.',
+      'plans.complete_title': 'Plan Complete!',
+      'plans.total_sets': 'Total Sets',
+      'plans.done': 'Done',
+      'plans.resume_confirm': 'Resume "{name}" plan?',
 
       // Common
       'common.cancel': 'Cancel',
@@ -254,6 +269,8 @@ const I18N = {
       'muscle_map.create_plan': 'Trainingsplan erstellen',
       'muscle_map.add_custom_exercise': 'Eigene Übung hinzufügen',
       'muscle_map.statistics': 'Statistiken',
+      'muscle_map.front': 'Vorne',
+      'muscle_map.back': 'Hinten',
 
       // Custom Exercise
       'custom.title': 'Eigene Übung hinzufügen',
@@ -289,10 +306,10 @@ const I18N = {
 
       // Log Screen
       'log.title': 'Trainingsprotokoll',
-      'log.empty': 'Noch kein Training protokolliert. Starte über die Muskelkarte!',
+      'log.empty': 'Dein Protokoll ist leer. XP aus deinen Sätzen wird hier angezeigt.',
       'log.undo': 'Rückgängig',
       'log.undo_confirm': 'Diesen Satz rückgängig machen? {xp} XP werden von {skill} abgezogen.',
-      'log.spillover': '+{xp} {skill}',
+      'log.spillover': '+{xp} XP {skill}',
 
       // Challenges Screen
       'challenges.title': 'Herausforderungen',
@@ -375,12 +392,16 @@ const I18N = {
       'intro.step2': '2. Wähle eine Übung und protokolliere deine Sätze',
       'intro.step3': '3. Verdiene XP und steigere deine 14 Muskel-Skills',
       'intro.step4': '4. Verfolge deinen Fortschritt und meistere Herausforderungen',
-      'intro.got_it': 'Verstanden!',
+      'intro.got_it': 'Verstanden',
 
       // Statistics Modal
       'stats.title': 'Statistiken',
       'stats.close': 'Schließen',
       'stats.no_data': 'Noch nicht genug Daten. Protokolliere Sätze um Statistiken zu sehen!',
+      'stats.muscle_changes': 'Muskelveränderungen (7 Tage)',
+      'stats.no_change': 'Keine Änderung',
+      'stats.sets_week': 'Sätze diese Woche',
+      'stats.no_graph_data': 'Noch keine Daten für diesen Muskel.',
 
       // Equipment
       'equipment.title': 'Wähle deine Ausrüstung',
@@ -398,8 +419,8 @@ const I18N = {
       // Training Plans
       'plans.title': 'Trainingspläne',
       'plans.create': 'Neuen Plan erstellen',
-      'plans.no_plans': 'Noch keine Trainingspläne.',
-      'plans.create_first': 'Erstelle deinen ersten Trainingsplan!',
+      'plans.no_plans': 'Du hast noch keine Trainingspläne erstellt.',
+      'plans.create_first': 'Folge den nächsten Schritten, um ein Training zu erstellen.',
       'plans.name_placeholder': 'Planname (z.B. Push-Tag)',
       'plans.add_exercise': 'Übung hinzufügen',
       'plans.sets': 'Sätze',
@@ -410,6 +431,18 @@ const I18N = {
       'plans.run': 'Plan starten',
       'plans.edit': 'Bearbeiten',
       'plans.exercises_count': '{count} Übungen',
+      'plans.exercise_progress': 'Übung {current} von {total}',
+      'plans.set_progress': 'Satz {done} / {target}',
+      'plans.prev_exercise': 'Zurück',
+      'plans.next_exercise': 'Weiter',
+      'plans.finish': 'Beenden',
+      'plans.exit_plan': 'Plan verlassen',
+      'plans.exit_confirm': 'Plan verlassen? Fortschritt geht verloren.',
+      'plans.skip_confirm': 'Übung überspringen? Nur {done}/{target} Sätze erledigt.',
+      'plans.complete_title': 'Plan abgeschlossen!',
+      'plans.total_sets': 'Gesamte Sätze',
+      'plans.done': 'Fertig',
+      'plans.resume_confirm': 'Plan "{name}" fortsetzen?',
 
       // Common
       'common.cancel': 'Abbrechen',
@@ -452,7 +485,7 @@ const I18N = {
     ru: {
       // Navigation
       'nav.muscle_map': 'Карта мышц',
-      'nav.stats_card': 'Статистика',
+      'nav.stats_card': 'Характеристики',
       'nav.log': 'Журнал',
       'nav.challenges': 'Испытания',
       'nav.friends': 'Друзья',
@@ -464,6 +497,8 @@ const I18N = {
       'muscle_map.create_plan': 'Создать план тренировки',
       'muscle_map.add_custom_exercise': 'Добавить своё упражнение',
       'muscle_map.statistics': 'Статистика',
+      'muscle_map.front': 'Спереди',
+      'muscle_map.back': 'Сзади',
 
       // Custom Exercise
       'custom.title': 'Добавить своё упражнение',
@@ -499,10 +534,10 @@ const I18N = {
 
       // Log Screen
       'log.title': 'Журнал тренировок',
-      'log.empty': 'Тренировки ещё не записаны. Начните с Карты мышц!',
+      'log.empty': 'Журнал пуст. XP, полученный за выполнение подходов, будет отображаться здесь.',
       'log.undo': 'Отменить',
       'log.undo_confirm': 'Отменить этот подход? {xp} XP будет вычтено из {skill}.',
-      'log.spillover': '+{xp} {skill}',
+      'log.spillover': '+{xp} XP {skill}',
 
       // Challenges Screen
       'challenges.title': 'Испытания',
@@ -585,12 +620,16 @@ const I18N = {
       'intro.step2': '2. Выберите упражнение и фиксируйте подходы',
       'intro.step3': '3. Зарабатывайте XP и повышайте уровни 14 разных мышц',
       'intro.step4': '4. Отслеживайте свой прогресс',
-      'intro.got_it': 'Понятно!',
+      'intro.got_it': 'Понятно',
 
       // Statistics Modal
       'stats.title': 'Статистика',
       'stats.close': 'Закрыть',
       'stats.no_data': 'Недостаточно данных. Запишите подходы чтобы увидеть статистику!',
+      'stats.muscle_changes': 'Изменения мышц (7 дней)',
+      'stats.no_change': 'Без изменений',
+      'stats.sets_week': 'подходов за неделю',
+      'stats.no_graph_data': 'Нет данных для этой мышцы.',
 
       // Equipment
       'equipment.title': 'Выберите оборудование',
@@ -608,8 +647,8 @@ const I18N = {
       // Training Plans
       'plans.title': 'Планы тренировок',
       'plans.create': 'Создать новый план',
-      'plans.no_plans': 'Планов пока нет.',
-      'plans.create_first': 'Создайте свой первый план тренировки!',
+      'plans.no_plans': 'У вас пока нет планов тренировок.',
+      'plans.create_first': 'Следуйте инструкциям, чтобы создать свою тренировку.',
       'plans.name_placeholder': 'Название плана (напр., День жима)',
       'plans.add_exercise': 'Добавить упражнение',
       'plans.sets': 'Подходы',
@@ -620,6 +659,18 @@ const I18N = {
       'plans.run': 'Запустить план',
       'plans.edit': 'Изменить',
       'plans.exercises_count': '{count} упражнений',
+      'plans.exercise_progress': 'Упражнение {current} из {total}',
+      'plans.set_progress': 'Подход {done} / {target}',
+      'plans.prev_exercise': 'Назад',
+      'plans.next_exercise': 'Далее',
+      'plans.finish': 'Завершить',
+      'plans.exit_plan': 'Выйти из плана',
+      'plans.exit_confirm': 'Выйти из плана? Прогресс будет потерян.',
+      'plans.skip_confirm': 'Пропустить упражнение? Выполнено только {done}/{target} подходов.',
+      'plans.complete_title': 'План завершён!',
+      'plans.total_sets': 'Всего подходов',
+      'plans.done': 'Готово',
+      'plans.resume_confirm': 'Продолжить план "{name}"?',
 
       // Common
       'common.cancel': 'Отмена',

@@ -6,7 +6,7 @@
 
 The app rewards users with XP for logging workout sets, calculated based on weight lifted, reps performed, and exercise type. The visual design mimics OSRS's distinctive aesthetic, including the characteristic skill card grid layout.
 
-**Current Version:** v0.4
+**Current Version:** v0.6
 
 ---
 
@@ -137,6 +137,7 @@ The app rewards users with XP for logging workout sets, calculated based on weig
 | `xpgains_custom_exercises` | Array of user-created exercises (v0.4) |
 | `xpgains_equipment_mode` | "1" or "0" for equipment filtering (v0.4) |
 | `xpgains_equipment` | Array of available equipment IDs (v0.4) |
+| `xpgains_plan_run` | Active plan run state with progress (v0.5) |
 
 ---
 
@@ -441,6 +442,45 @@ back_erector → skill_erectors.png
 
 ## Version History
 
+### v0.6 (January 28, 2026)
+- **Log Entry Spillover XP Display**:
+  - Moved passive/spillover XP from below exercise name to right side
+  - Displayed in green with "XP" label and muscle name below
+  - Consistent format with main XP display
+- **Alternative Theme Complete Redesign** (Dark Charcoal + Purple):
+  - New palette: near-black charcoal backgrounds (#121316, #1A1C21)
+  - Muted purple accents (#6B5BD6) replacing all brown/tan
+  - Subtle borders (#2E323C) - no bright contrasts
+  - Modern, neutral, readable appearance
+  - All UI elements updated: modals, inputs, cards, buttons
+- **Icon Desaturation Fix**:
+  - Icons now desaturated by DEFAULT in Alternative theme
+  - Hover state slightly increases saturation for feedback
+  - Fixed selector to apply to base state, not just :hover
+- **Action Button Color Overhaul**:
+  - Alternative theme: Muted purple primary buttons
+  - Classic theme: OSRS-style yellow/gold primary buttons
+  - No more green action buttons in either theme
+  - Consistent styling across all screens/modals
+
+### v0.5 (January 28, 2026)
+- **Training Plan Run Mode** - Full guided workout progression:
+  - Linear flow through plan exercises with set tracking
+  - Navigation controls (Previous/Next) to move between exercises
+  - Auto-advance when target sets are completed
+  - Plan completion summary with per-exercise stats
+  - Persistent state survives page refresh (resume on reload)
+  - Skip confirmation for incomplete exercises
+- **Plan UI Improvements**:
+  - Redesigned plan card layout with better typography
+  - Improved plan editor with proper item row styling
+  - Consistent button sizing and spacing
+- **iOS Home Screen Icon Fix**:
+  - Added multiple apple-touch-icon sizes (120, 167, 180)
+  - Added 192x192 and 512x512 icons for PWA compliance
+  - Updated manifest.json with proper icon configuration
+  - Added additional PWA meta tags
+
 ### v0.4 (January 28, 2026)
 - Added internationalization with 15 languages (German, Russian complete)
 - Added OS language auto-detection
@@ -473,5 +513,5 @@ back_erector → skill_erectors.png
 
 ---
 
-*Last updated: January 28, 2026*
+*Last updated: January 28, 2026 (v0.6)*
 *Created by: Claude Code*

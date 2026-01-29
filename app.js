@@ -57,7 +57,19 @@ const AppState = {
 
   // Equipment settings
   equipmentMode: false,
-  equipment: ['bodyweight'] // Default to bodyweight only
+  equipment: ['bodyweight'], // Default to bodyweight only
+
+  // Active plan run state
+  planRun: null
+  // Structure when active:
+  // {
+  //   planId: string,
+  //   planName: string,
+  //   items: [{muscleId, exerciseId, sets}],
+  //   currentIndex: number,
+  //   setsCompleted: [number], // per exercise
+  //   active: boolean
+  // }
 };
 
 // ============================================
@@ -77,6 +89,7 @@ const Storage = {
     customExercises: 'xpgains_custom_exercises',
     equipmentMode: 'xpgains_equipment_mode',
     equipment: 'xpgains_equipment',
+    planRun: 'xpgains_plan_run',
     lang: 'xpgains_lang',
     theme: 'xpgains_theme',
     introDismissed: 'xpgains_intro_dismissed'
@@ -96,6 +109,7 @@ const Storage = {
       localStorage.setItem(this.keys.customExercises, JSON.stringify(AppState.customExercises));
       localStorage.setItem(this.keys.equipmentMode, AppState.equipmentMode ? '1' : '0');
       localStorage.setItem(this.keys.equipment, JSON.stringify(AppState.equipment));
+      localStorage.setItem(this.keys.planRun, JSON.stringify(AppState.planRun));
     } catch (e) {
       console.error('Failed to save to localStorage:', e);
     }
@@ -115,6 +129,7 @@ const Storage = {
       const customExercises = localStorage.getItem(this.keys.customExercises);
       const equipmentMode = localStorage.getItem(this.keys.equipmentMode);
       const equipment = localStorage.getItem(this.keys.equipment);
+      const planRun = localStorage.getItem(this.keys.planRun);
       const lang = localStorage.getItem(this.keys.lang);
       const theme = localStorage.getItem(this.keys.theme);
 
@@ -130,6 +145,7 @@ const Storage = {
       if (customExercises) AppState.customExercises = JSON.parse(customExercises);
       if (equipmentMode) AppState.equipmentMode = equipmentMode === '1';
       if (equipment) AppState.equipment = JSON.parse(equipment);
+      if (planRun) AppState.planRun = JSON.parse(planRun);
       if (lang) AppState.settings.lang = lang;
       if (theme) AppState.settings.theme = theme;
 
@@ -432,7 +448,6 @@ const IntroModal = {
 
     return `
       <div class="intro-language-selector">
-        <span class="intro-lang-label">${currentFlag}</span>
         <select class="intro-lang-select" id="intro-language-select">
           ${options}
         </select>
@@ -853,12 +868,12 @@ const LogScreen = {
     // Display weight in current unit
     const displayWeight = Units.display(entry.weight);
 
-    // Spillover display
+    // Spillover display - moved to right side
     let spilloverHtml = '';
     if (entry.spillover && entry.spillover.length > 0) {
       spilloverHtml = entry.spillover.map(s =>
-        `<span class="log-entry-spillover">${i18n.t('log.spillover', { xp: s.xp, skill: i18n.skillName(s.skillId) })}</span>`
-      ).join(' ');
+        `<div class="log-entry-spillover-item">+${s.xp} XP<span class="log-entry-spillover-skill">${i18n.skillName(s.skillId)}</span></div>`
+      ).join('');
     }
 
     const el = document.createElement('div');
@@ -873,11 +888,11 @@ const LogScreen = {
           ${displayWeight} ${Units.label()} &times; ${entry.reps} reps
         </div>
         <div class="log-entry-time">${time} ${indicator}</div>
-        ${spilloverHtml ? `<div class="log-entry-spillover-row">${spilloverHtml}</div>` : ''}
       </div>
       <div class="log-entry-right">
-        <div class="log-entry-xp">+${entry.xpAwarded}</div>
+        <div class="log-entry-xp">+${entry.xpAwarded} XP</div>
         <div class="log-entry-skill-label">${skillName}</div>
+        ${spilloverHtml ? `<div class="log-entry-spillover-section">${spilloverHtml}</div>` : ''}
         <button class="log-undo-btn" data-entry-id="${entry.id}">${i18n.t('log.undo')}</button>
       </div>
     `;
@@ -920,22 +935,64 @@ const LogScreen = {
 };
 
 // ============================================
-// MUSCLE MAP
+// MUSCLE MAP (PNG Hit-Mask Implementation)
 // ============================================
 const MuscleMap = {
+  // ============================================
+  // HIT-MASK PIXEL SAMPLING IMPLEMENTATION
+  // ============================================
+
+  // State
+  currentView: 'front',
+  selectedMuscle: null,
+  hoveredMuscle: null,
+  debugMode: false,
+  initialized: false,
+
+  // Base URL for assets (handles GitHub Pages subpath)
+  base: null,
+
+  // Image paths (relative to base)
+  paths: {
+    front: {
+      visible: 'assets/Muscle%20Map/Muscle_Map_Front.png',
+      hit: 'assets/Muscle%20Map/Muscle_Map_Front_Hit.png'
+    },
+    back: {
+      visible: 'assets/Muscle%20Map/Muscle_Map_Back.png',
+      hit: 'assets/Muscle%20Map/Muscle_Map_Back_Hit.png'
+    }
+  },
+
+  // Hit-mask color mapping (RGB with tolerance ±2)
+  // IDs must match SKILLS array in data.js
+  colorMap: [
+    { r: 255, g: 0,   b: 0,   id: 'chest' },
+    { r: 255, g: 128, b: 0,   id: 'delts' },
+    { r: 255, g: 255, b: 0,   id: 'biceps' },
+    { r: 128, g: 255, b: 0,   id: 'triceps' },
+    { r: 0,   g: 255, b: 0,   id: 'forearms' },
+    { r: 0,   g: 255, b: 255, id: 'core' },
+    { r: 0,   g: 128, b: 255, id: 'quads' },
+    { r: 0,   g: 0,   b: 255, id: 'hamstrings' },
+    { r: 128, g: 0,   b: 255, id: 'calves' },
+    { r: 255, g: 0,   b: 255, id: 'glutes' },
+    { r: 255, g: 0,   b: 128, id: 'back_lats' },
+    { r: 0,   g: 128, b: 128, id: 'back_erector' },
+    { r: 128, g: 64,  b: 0,   id: 'traps' },
+    { r: 128, g: 128, b: 128, id: 'neck' }
+  ],
+
+  // Hit-mask data per view
+  hitData: {
+    front: { canvas: null, ctx: null, img: null, width: 0, height: 0 },
+    back: { canvas: null, ctx: null, img: null, width: 0, height: 0 }
+  },
+
+  // Highlight cache per view + muscleId
+  highlightCache: {},
+
   render() {
-    const container = document.getElementById('muscle-map-container');
-    container.innerHTML = this.getSvg();
-
-    // Add click handlers to muscle regions
-    const regions = container.querySelectorAll('.muscle-region');
-    regions.forEach(region => {
-      region.addEventListener('click', () => {
-        const skillId = region.dataset.skillId;
-        TrainingFlow.start(skillId);
-      });
-    });
-
     // Update action button text with translations
     const trainingPlansBtn = document.getElementById('open-training-plans');
     const customExerciseBtn = document.getElementById('open-custom-exercise');
@@ -955,122 +1012,520 @@ const MuscleMap = {
       statisticsBtn.textContent = i18n.t('muscle_map.statistics');
       statisticsBtn.onclick = () => StatisticsModal.show();
     }
+
+    // Update toggle button text
+    const frontBtn = document.getElementById('map-view-front');
+    const backBtn = document.getElementById('map-view-back');
+    if (frontBtn) frontBtn.textContent = i18n.t('muscle_map.front') || 'Front';
+    if (backBtn) backBtn.textContent = i18n.t('muscle_map.back') || 'Back';
+
+    // Initialize the map (only once)
+    if (!this.initialized) {
+      this.init();
+    }
   },
 
-  getSvg() {
-    return `
-      <svg class="muscle-map-svg" viewBox="0 0 200 400" xmlns="http://www.w3.org/2000/svg">
-        <!-- Head (not clickable) -->
-        <ellipse cx="100" cy="30" rx="25" ry="30" fill="#2d2d2d" stroke="#3d352a" stroke-width="2"/>
+  init() {
+    if (this.initialized) return;
 
-        <!-- Neck -->
-        <rect class="muscle-region" data-skill-id="neck" x="88" y="55" width="24" height="20" rx="4">
-          <title>Neck</title>
-        </rect>
+    // Set base URL for assets
+    this.base = new URL('.', document.baseURI).toString();
 
-        <!-- Traps -->
-        <path class="muscle-region" data-skill-id="traps" d="M 65 75 L 88 75 L 88 95 L 65 85 Z">
-          <title>Traps</title>
-        </path>
-        <path class="muscle-region" data-skill-id="traps" d="M 135 75 L 112 75 L 112 95 L 135 85 Z">
-          <title>Traps</title>
-        </path>
+    const viewport = document.getElementById('muscle-map-viewport');
+    const visibleImg = document.getElementById('muscle-map-visible');
+    const overlay = document.getElementById('muscle-map-overlay');
+    const debugCanvas = document.getElementById('muscle-map-debug');
 
-        <!-- Delts (Shoulders) -->
-        <ellipse class="muscle-region" data-skill-id="delts" cx="55" cy="90" rx="18" ry="15">
-          <title>Delts</title>
-        </ellipse>
-        <ellipse class="muscle-region" data-skill-id="delts" cx="145" cy="90" rx="18" ry="15">
-          <title>Delts</title>
-        </ellipse>
+    if (!viewport || !visibleImg || !overlay) {
+      console.error('MuscleMap: Missing required elements');
+      return;
+    }
 
-        <!-- Chest -->
-        <path class="muscle-region" data-skill-id="chest" d="M 65 95 Q 100 90 135 95 L 130 135 Q 100 140 70 135 Z">
-          <title>Chest</title>
-        </path>
+    console.log('MuscleMap: Initializing with hit-mask pixel sampling...');
+    console.log('MuscleMap: Base URL:', this.base);
 
-        <!-- Biceps -->
-        <ellipse class="muscle-region" data-skill-id="biceps" cx="45" cy="130" rx="12" ry="28">
-          <title>Biceps</title>
-        </ellipse>
-        <ellipse class="muscle-region" data-skill-id="biceps" cx="155" cy="130" rx="12" ry="28">
-          <title>Biceps</title>
-        </ellipse>
+    // Set initial visible image
+    visibleImg.src = this.base + this.paths[this.currentView].visible;
 
-        <!-- Triceps -->
-        <ellipse class="muscle-region" data-skill-id="triceps" cx="38" cy="125" rx="8" ry="22">
-          <title>Triceps</title>
-        </ellipse>
-        <ellipse class="muscle-region" data-skill-id="triceps" cx="162" cy="125" rx="8" ry="22">
-          <title>Triceps</title>
-        </ellipse>
+    // Load hit-masks for both views
+    this.loadHitMask('front');
+    this.loadHitMask('back');
 
-        <!-- Core (Abs) -->
-        <rect class="muscle-region" data-skill-id="core" x="75" y="140" width="50" height="60" rx="8">
-          <title>Core</title>
-        </rect>
+    // Set up toggle buttons
+    const frontBtn = document.getElementById('map-view-front');
+    const backBtn = document.getElementById('map-view-back');
 
-        <!-- Back - Lats -->
-        <path class="muscle-region" data-skill-id="back_lats" d="M 65 100 L 75 100 L 75 160 L 65 140 Z">
-          <title>Back - Lats</title>
-        </path>
-        <path class="muscle-region" data-skill-id="back_lats" d="M 135 100 L 125 100 L 125 160 L 135 140 Z">
-          <title>Back - Lats</title>
-        </path>
+    if (frontBtn) {
+      frontBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.setView('front');
+      });
+    }
+    if (backBtn) {
+      backBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.setView('back');
+      });
+    }
 
-        <!-- Back - Erector -->
-        <path class="muscle-region" data-skill-id="back_erector" d="M 75 160 L 75 200 L 70 190 L 65 160 Z">
-          <title>Back - Erector</title>
-        </path>
-        <path class="muscle-region" data-skill-id="back_erector" d="M 125 160 L 125 200 L 130 190 L 135 160 Z">
-          <title>Back - Erector</title>
-        </path>
+    // Set up pointer events on viewport
+    viewport.addEventListener('click', (e) => this.handleClick(e));
+    viewport.addEventListener('mousemove', (e) => this.handleHover(e));
+    viewport.addEventListener('mouseleave', () => this.clearHover());
 
-        <!-- Forearms -->
-        <ellipse class="muscle-region" data-skill-id="forearms" cx="40" cy="175" rx="10" ry="25">
-          <title>Forearms</title>
-        </ellipse>
-        <ellipse class="muscle-region" data-skill-id="forearms" cx="160" cy="175" rx="10" ry="25">
-          <title>Forearms</title>
-        </ellipse>
+    // Touch events
+    viewport.addEventListener('touchend', (e) => {
+      e.preventDefault();
+      if (e.changedTouches.length > 0) {
+        this.handleClick(e.changedTouches[0]);
+      }
+    }, { passive: false });
 
-        <!-- Glutes -->
-        <ellipse class="muscle-region" data-skill-id="glutes" cx="85" cy="215" rx="18" ry="15">
-          <title>Glutes</title>
-        </ellipse>
-        <ellipse class="muscle-region" data-skill-id="glutes" cx="115" cy="215" rx="18" ry="15">
-          <title>Glutes</title>
-        </ellipse>
+    // Handle resize - clear highlight cache as sizes change
+    window.addEventListener('resize', () => {
+      this.highlightCache = {};
+      if (this.selectedMuscle) {
+        this.drawHighlight(this.selectedMuscle);
+      }
+      if (this.debugMode) {
+        this.showDebugOverlay();
+      }
+    });
 
-        <!-- Quads -->
-        <ellipse class="muscle-region" data-skill-id="quads" cx="80" cy="275" rx="20" ry="45">
-          <title>Quads</title>
-        </ellipse>
-        <ellipse class="muscle-region" data-skill-id="quads" cx="120" cy="275" rx="20" ry="45">
-          <title>Quads</title>
-        </ellipse>
+    // Dev toggle: press Ctrl+D to show/hide debug overlay
+    document.addEventListener('keydown', (e) => {
+      if ((e.key === 'd' || e.key === 'D') && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        this.toggleDebug();
+      }
+    });
 
-        <!-- Hamstrings -->
-        <path class="muscle-region" data-skill-id="hamstrings" d="M 60 250 L 65 240 L 65 300 L 60 310 Z">
-          <title>Hamstrings</title>
-        </path>
-        <path class="muscle-region" data-skill-id="hamstrings" d="M 140 250 L 135 240 L 135 300 L 140 310 Z">
-          <title>Hamstrings</title>
-        </path>
+    this.initialized = true;
+    console.log('MuscleMap: ✓ Initialized (hit-mask mode)');
+  },
 
-        <!-- Calves -->
-        <ellipse class="muscle-region" data-skill-id="calves" cx="75" cy="355" rx="12" ry="30">
-          <title>Calves</title>
-        </ellipse>
-        <ellipse class="muscle-region" data-skill-id="calves" cx="125" cy="355" rx="12" ry="30">
-          <title>Calves</title>
-        </ellipse>
+  loadHitMask(view) {
+    const hitPath = this.base + this.paths[view].hit;
+    console.log('MuscleMap: Loading hit-mask for', view, ':', hitPath);
 
-        <!-- Feet (not clickable) -->
-        <ellipse cx="75" cy="392" rx="15" ry="8" fill="#2d2d2d" stroke="#3d352a" stroke-width="2"/>
-        <ellipse cx="125" cy="392" rx="15" ry="8" fill="#2d2d2d" stroke="#3d352a" stroke-width="2"/>
-      </svg>
-    `;
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+
+    img.onload = () => {
+      // Create offscreen canvas at native resolution
+      const canvas = document.createElement('canvas');
+      canvas.width = img.naturalWidth;
+      canvas.height = img.naturalHeight;
+      const ctx = canvas.getContext('2d', { willReadFrequently: true });
+      ctx.drawImage(img, 0, 0);
+
+      this.hitData[view] = {
+        canvas: canvas,
+        ctx: ctx,
+        img: img,
+        width: img.naturalWidth,
+        height: img.naturalHeight
+      };
+
+      console.log('MuscleMap: ✓ Hit-mask loaded for', view, ':', img.naturalWidth, 'x', img.naturalHeight);
+    };
+
+    img.onerror = (e) => {
+      console.error('MuscleMap: Failed to load hit-mask for', view, ':', hitPath, e);
+    };
+
+    img.src = hitPath;
+  },
+
+  setView(view) {
+    if (view === this.currentView) return;
+
+    this.currentView = view;
+    this.hoveredMuscle = null;
+
+    // Update toggle buttons
+    document.querySelectorAll('.muscle-map-toggle .toggle-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.view === view);
+    });
+
+    // Update visible image
+    const visibleImg = document.getElementById('muscle-map-visible');
+    if (visibleImg) {
+      visibleImg.src = this.base + this.paths[view].visible;
+    }
+
+    // Clear overlay
+    this.clearOverlay();
+    this.hideLabel();
+
+    // Redraw selected if exists on this view
+    if (this.selectedMuscle) {
+      setTimeout(() => this.drawHighlight(this.selectedMuscle), 50);
+    }
+
+    // Redraw debug if enabled
+    if (this.debugMode) {
+      setTimeout(() => this.showDebugOverlay(), 100);
+    }
+  },
+
+  // Get contain-fit scale and offsets for a container
+  getContainLayout(containerW, containerH, imageW, imageH) {
+    const scale = Math.min(containerW / imageW, containerH / imageH);
+    const drawW = imageW * scale;
+    const drawH = imageH * scale;
+    const offsetX = (containerW - drawW) / 2;
+    const offsetY = (containerH - drawH) / 2;
+    return { scale, drawW, drawH, offsetX, offsetY };
+  },
+
+  // Convert pointer position to hit-mask pixel coordinates
+  pointerToImageCoords(e) {
+    const viewport = document.getElementById('muscle-map-viewport');
+    const hitInfo = this.hitData[this.currentView];
+
+    if (!viewport || !hitInfo || !hitInfo.width) {
+      return null;
+    }
+
+    const rect = viewport.getBoundingClientRect();
+    const cw = rect.width;
+    const ch = rect.height;
+    const iw = hitInfo.width;
+    const ih = hitInfo.height;
+
+    // Pointer position relative to viewport
+    const px = e.clientX - rect.left;
+    const py = e.clientY - rect.top;
+
+    // Calculate contain layout
+    const layout = this.getContainLayout(cw, ch, iw, ih);
+
+    // Check if click is outside the drawn image area
+    if (px < layout.offsetX || px > layout.offsetX + layout.drawW ||
+        py < layout.offsetY || py > layout.offsetY + layout.drawH) {
+      return null;
+    }
+
+    // Convert to image coordinates
+    const ix = (px - layout.offsetX) / layout.scale;
+    const iy = (py - layout.offsetY) / layout.scale;
+
+    // Clamp to valid range
+    const clampedX = Math.max(0, Math.min(iw - 1, Math.floor(ix)));
+    const clampedY = Math.max(0, Math.min(ih - 1, Math.floor(iy)));
+
+    return {
+      x: clampedX,
+      y: clampedY,
+      px, py, cw, ch, iw, ih,
+      layout
+    };
+  },
+
+  // Get muscle ID from RGB color with tolerance
+  rgbToMuscleId(r, g, b) {
+    const tolerance = 2;
+    for (const mapping of this.colorMap) {
+      if (Math.abs(r - mapping.r) <= tolerance &&
+          Math.abs(g - mapping.g) <= tolerance &&
+          Math.abs(b - mapping.b) <= tolerance) {
+        return mapping.id;
+      }
+    }
+    return null;
+  },
+
+  // Sample hit-mask at coordinates
+  sampleHitMask(x, y) {
+    const hitInfo = this.hitData[this.currentView];
+    if (!hitInfo || !hitInfo.ctx) return null;
+
+    try {
+      const pixel = hitInfo.ctx.getImageData(x, y, 1, 1).data;
+      return { r: pixel[0], g: pixel[1], b: pixel[2], a: pixel[3] };
+    } catch (e) {
+      console.error('MuscleMap: getImageData failed (CORS?):', e);
+      return null;
+    }
+  },
+
+  // Search nearby pixels for a valid muscle (forgiving selection)
+  searchNearby(x, y, radius = 8) {
+    const hitInfo = this.hitData[this.currentView];
+    if (!hitInfo) return null;
+
+    const w = hitInfo.width;
+    const h = hitInfo.height;
+
+    // Spiral search outward
+    for (let r = 1; r <= radius; r++) {
+      for (let dx = -r; dx <= r; dx++) {
+        for (let dy = -r; dy <= r; dy++) {
+          if (Math.abs(dx) !== r && Math.abs(dy) !== r) continue;
+
+          const nx = x + dx;
+          const ny = y + dy;
+
+          if (nx >= 0 && nx < w && ny >= 0 && ny < h) {
+            const pixel = this.sampleHitMask(nx, ny);
+            if (pixel && pixel.a > 0) {
+              const muscleId = this.rgbToMuscleId(pixel.r, pixel.g, pixel.b);
+              if (muscleId) return muscleId;
+            }
+          }
+        }
+      }
+    }
+    return null;
+  },
+
+  getMuscleAtPoint(e, debug = false) {
+    const coords = this.pointerToImageCoords(e);
+    if (!coords) {
+      if (debug) console.log('MuscleMap: Click outside image area');
+      return null;
+    }
+
+    const pixel = this.sampleHitMask(coords.x, coords.y);
+
+    if (debug) {
+      console.log('MuscleMap: === Click Debug ===');
+      console.log('  Container:', coords.cw.toFixed(0), 'x', coords.ch.toFixed(0));
+      console.log('  Image native:', coords.iw, 'x', coords.ih);
+      console.log('  Scale:', coords.layout.scale.toFixed(4));
+      console.log('  Offsets:', coords.layout.offsetX.toFixed(1), coords.layout.offsetY.toFixed(1));
+      console.log('  Pointer (px,py):', coords.px.toFixed(1), coords.py.toFixed(1));
+      console.log('  Image (ix,iy):', coords.x, coords.y);
+      console.log('  RGBA:', pixel ? `${pixel.r},${pixel.g},${pixel.b},${pixel.a}` : 'null');
+    }
+
+    if (!pixel) return null;
+
+    // If transparent, try nearby search
+    if (pixel.a === 0) {
+      const nearby = this.searchNearby(coords.x, coords.y);
+      if (debug && nearby) console.log('  Nearby found:', nearby);
+      return nearby;
+    }
+
+    const muscleId = this.rgbToMuscleId(pixel.r, pixel.g, pixel.b);
+    if (debug) console.log('  Muscle ID:', muscleId || 'no match');
+
+    return muscleId;
+  },
+
+  handleClick(e) {
+    const muscleId = this.getMuscleAtPoint(e, this.debugMode);
+
+    if (muscleId) {
+      this.selectedMuscle = muscleId;
+      this.drawHighlight(muscleId);
+      this.showLabel(muscleId);
+
+      // Start training flow
+      TrainingFlow.start(muscleId);
+    }
+  },
+
+  handleHover(e) {
+    const muscleId = this.getMuscleAtPoint(e);
+
+    if (muscleId !== this.hoveredMuscle) {
+      this.hoveredMuscle = muscleId;
+
+      if (muscleId) {
+        this.drawHighlight(muscleId, true);
+      } else {
+        this.clearOverlay();
+        if (this.selectedMuscle) {
+          this.drawHighlight(this.selectedMuscle);
+        }
+      }
+    }
+  },
+
+  clearHover() {
+    this.hoveredMuscle = null;
+    this.clearOverlay();
+    if (this.selectedMuscle) {
+      this.drawHighlight(this.selectedMuscle);
+    }
+  },
+
+  clearOverlay() {
+    const overlay = document.getElementById('muscle-map-overlay');
+    if (overlay) {
+      const ctx = overlay.getContext('2d');
+      ctx.clearRect(0, 0, overlay.width, overlay.height);
+    }
+  },
+
+  // Create highlight mask from hit-mask pixels
+  createHighlightMask(muscleId) {
+    const hitInfo = this.hitData[this.currentView];
+    if (!hitInfo || !hitInfo.ctx) return null;
+
+    const cacheKey = `${this.currentView}_${muscleId}`;
+    if (this.highlightCache[cacheKey]) {
+      return this.highlightCache[cacheKey];
+    }
+
+    // Find the RGB for this muscle
+    const mapping = this.colorMap.find(m => m.id === muscleId);
+    if (!mapping) return null;
+
+    const w = hitInfo.width;
+    const h = hitInfo.height;
+
+    // Get all hit-mask pixels
+    const imageData = hitInfo.ctx.getImageData(0, 0, w, h);
+    const data = imageData.data;
+
+    // Create mask canvas
+    const maskCanvas = document.createElement('canvas');
+    maskCanvas.width = w;
+    maskCanvas.height = h;
+    const maskCtx = maskCanvas.getContext('2d');
+    const maskData = maskCtx.createImageData(w, h);
+
+    const tolerance = 2;
+    const tr = mapping.r, tg = mapping.g, tb = mapping.b;
+
+    // Build mask where matching pixels are white, others transparent
+    for (let i = 0; i < data.length; i += 4) {
+      const r = data[i], g = data[i + 1], b = data[i + 2], a = data[i + 3];
+
+      if (a > 0 &&
+          Math.abs(r - tr) <= tolerance &&
+          Math.abs(g - tg) <= tolerance &&
+          Math.abs(b - tb) <= tolerance) {
+        maskData.data[i] = 255;     // R
+        maskData.data[i + 1] = 255; // G
+        maskData.data[i + 2] = 255; // B
+        maskData.data[i + 3] = 255; // A
+      }
+    }
+
+    maskCtx.putImageData(maskData, 0, 0);
+
+    this.highlightCache[cacheKey] = maskCanvas;
+    return maskCanvas;
+  },
+
+  drawHighlight(muscleId, isHover = false) {
+    const overlay = document.getElementById('muscle-map-overlay');
+    const viewport = document.getElementById('muscle-map-viewport');
+    const hitInfo = this.hitData[this.currentView];
+
+    if (!overlay || !viewport || !hitInfo || !hitInfo.width) return;
+
+    const rect = viewport.getBoundingClientRect();
+    const cw = rect.width;
+    const ch = rect.height;
+
+    // Set canvas size to match viewport
+    overlay.width = cw;
+    overlay.height = ch;
+
+    const ctx = overlay.getContext('2d');
+    ctx.clearRect(0, 0, cw, ch);
+
+    // Get highlight mask
+    const mask = this.createHighlightMask(muscleId);
+    if (!mask) return;
+
+    // Calculate layout for drawing mask aligned with visible image
+    const layout = this.getContainLayout(cw, ch, hitInfo.width, hitInfo.height);
+
+    // Draw glow effect (blurred, colored)
+    ctx.save();
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.filter = 'blur(6px)';
+    ctx.globalAlpha = isHover ? 0.4 : 0.6;
+
+    // Draw colored glow
+    const tempCanvas = document.createElement('canvas');
+    tempCanvas.width = mask.width;
+    tempCanvas.height = mask.height;
+    const tempCtx = tempCanvas.getContext('2d');
+    tempCtx.drawImage(mask, 0, 0);
+    tempCtx.globalCompositeOperation = 'source-in';
+    tempCtx.fillStyle = '#ff981f';
+    tempCtx.fillRect(0, 0, mask.width, mask.height);
+
+    ctx.drawImage(tempCanvas, layout.offsetX, layout.offsetY, layout.drawW, layout.drawH);
+    ctx.restore();
+
+    // Draw solid outline (crisp)
+    ctx.save();
+    ctx.filter = 'none';
+    ctx.globalAlpha = isHover ? 0.6 : 0.85;
+    ctx.drawImage(tempCanvas, layout.offsetX, layout.offsetY, layout.drawW, layout.drawH);
+    ctx.restore();
+  },
+
+  showLabel(muscleId) {
+    const label = document.getElementById('muscle-map-label');
+    if (!label) return;
+
+    const skill = SKILLS.find(s => s.id === muscleId);
+    if (!skill) return;
+
+    const level = XP.getLevel(muscleId);
+    const name = i18n.skillName(muscleId);
+
+    label.innerHTML = `${name} <span class="label-level">(Lv ${level})</span>`;
+    label.style.display = 'block';
+  },
+
+  hideLabel() {
+    const label = document.getElementById('muscle-map-label');
+    if (label) label.style.display = 'none';
+  },
+
+  toggleDebug() {
+    this.debugMode = !this.debugMode;
+    const debugCanvas = document.getElementById('muscle-map-debug');
+
+    if (debugCanvas) {
+      debugCanvas.style.display = this.debugMode ? 'block' : 'none';
+      if (this.debugMode) {
+        this.showDebugOverlay();
+        console.log('MuscleMap: Debug Mode ON (Ctrl+D to toggle)');
+      } else {
+        const ctx = debugCanvas.getContext('2d');
+        ctx.clearRect(0, 0, debugCanvas.width, debugCanvas.height);
+        console.log('MuscleMap: Debug Mode OFF');
+      }
+    }
+  },
+
+  showDebugOverlay() {
+    const debugCanvas = document.getElementById('muscle-map-debug');
+    const viewport = document.getElementById('muscle-map-viewport');
+    const hitInfo = this.hitData[this.currentView];
+
+    if (!debugCanvas || !viewport || !hitInfo || !hitInfo.img) return;
+
+    const rect = viewport.getBoundingClientRect();
+    const cw = rect.width;
+    const ch = rect.height;
+
+    // Set canvas size
+    debugCanvas.width = cw;
+    debugCanvas.height = ch;
+
+    const ctx = debugCanvas.getContext('2d');
+    ctx.clearRect(0, 0, cw, ch);
+
+    // Calculate layout
+    const layout = this.getContainLayout(cw, ch, hitInfo.width, hitInfo.height);
+
+    // Draw hit-mask at 35% opacity
+    ctx.globalAlpha = 0.35;
+    ctx.drawImage(hitInfo.img, layout.offsetX, layout.offsetY, layout.drawW, layout.drawH);
+    ctx.globalAlpha = 1.0;
   }
 };
 
@@ -1471,8 +1926,6 @@ const ChallengesScreen = {
     // Show challenge creation form
     container.innerHTML = `
       <div class="challenge-setup">
-        <h3 class="challenge-title">${i18n.t('challenges.workout_quest')}</h3>
-
         <div class="challenge-option">
           <label class="input-label">${i18n.t('challenges.body_focus')}</label>
           <div class="toggle-group" id="focus-toggle">
@@ -1913,7 +2366,7 @@ const TrainingPlans = {
             <p>${i18n.t('plans.no_plans')}</p>
             <p>${i18n.t('plans.create_first')}</p>
           </div>
-          <button class="xp-tick-btn" id="create-plan-btn">${i18n.t('plans.create')}</button>
+          <button class="xp-tick-btn plans-create-btn" id="create-plan-btn">${i18n.t('plans.create')}</button>
         </div>
       `;
       content.querySelector('#create-plan-btn').addEventListener('click', () => {
@@ -1929,9 +2382,9 @@ const TrainingPlans = {
           <span class="plan-meta">${i18n.t('plans.exercises_count', { count: plan.items.length })}</span>
         </div>
         <div class="plan-card-actions">
-          <button class="xp-tick-btn plan-run-btn" data-plan-id="${plan.id}">${i18n.t('plans.run')}</button>
-          <button class="back-btn plan-edit-btn" data-plan-id="${plan.id}">${i18n.t('plans.edit')}</button>
-          <button class="back-btn danger-btn plan-delete-btn" data-plan-id="${plan.id}">${i18n.t('plans.delete')}</button>
+          <button class="plan-run-btn" data-plan-id="${plan.id}">${i18n.t('plans.run')}</button>
+          <button class="plan-edit-btn" data-plan-id="${plan.id}">${i18n.t('plans.edit')}</button>
+          <button class="plan-delete-btn" data-plan-id="${plan.id}">${i18n.t('plans.delete')}</button>
         </div>
       </div>
     `).join('');
@@ -1996,8 +2449,7 @@ const TrainingPlans = {
           <button class="back-btn plan-add-exercise-btn" id="add-exercise-btn">${i18n.t('plans.add_exercise')}</button>
 
           <div class="plan-editor-actions">
-            <button class="back-btn" id="plan-cancel">${i18n.t('plans.cancel')}</button>
-            <button class="xp-tick-btn" id="plan-save">${i18n.t('plans.save')}</button>
+            <button class="xp-tick-btn" id="plan-save">${i18n.t('common.save')}</button>
           </div>
         </div>
       </div>
@@ -2008,11 +2460,6 @@ const TrainingPlans = {
     // Add exercise button
     content.querySelector('#add-exercise-btn').addEventListener('click', () => {
       this.addItemRow(muscleOptions);
-    });
-
-    // Cancel button
-    content.querySelector('#plan-cancel').addEventListener('click', () => {
-      Modal.hide('plan-editor-modal');
     });
 
     // Save button
@@ -2155,24 +2602,309 @@ const TrainingPlans = {
 
     Modal.hide('training-plans-modal');
 
-    // Start with the first exercise
-    const firstItem = plan.items[0];
-
-    // Set up training state
-    AppState.training = {
-      skillId: firstItem.muscleId,
-      subcategoryId: null,
-      exerciseId: firstItem.exerciseId
+    // Initialize plan run state
+    AppState.planRun = {
+      planId: plan.id,
+      planName: plan.name,
+      items: plan.items.map(item => ({ ...item })),
+      currentIndex: 0,
+      setsCompleted: plan.items.map(() => 0),
+      active: true
     };
 
-    // Find subcategory for this exercise
-    const exercise = getExerciseById(firstItem.exerciseId);
-    if (exercise) {
-      AppState.training.subcategoryId = exercise.subcategoryId || getSubcategoriesBySkill(firstItem.muscleId)[0]?.id;
+    Storage.save();
+    this.showPlanExercise();
+  },
+
+  /**
+   * Resume an in-progress plan run
+   */
+  resumePlan() {
+    if (!AppState.planRun || !AppState.planRun.active) return;
+    this.showPlanExercise();
+  },
+
+  /**
+   * Show the current plan exercise with navigation
+   */
+  showPlanExercise() {
+    const run = AppState.planRun;
+    if (!run || !run.active) return;
+
+    const currentItem = run.items[run.currentIndex];
+    const exercise = getExerciseById(currentItem.exerciseId);
+    const skill = getSkillById(currentItem.muscleId);
+
+    if (!exercise || !skill) {
+      this.endPlan();
+      return;
     }
 
-    TrainingFlow.showExerciseDetail();
+    // Set up training state for XP calculation
+    AppState.training = {
+      skillId: currentItem.muscleId,
+      subcategoryId: exercise.subcategoryId || null,
+      exerciseId: currentItem.exerciseId
+    };
+
+    const content = document.getElementById('training-flow-content');
+    const isFavorite = AppState.favorites[exercise.id];
+    const weightConfig = Units.convertConfig(exercise.weight);
+
+    // Load last used values
+    const lastInputs = AppState.lastExerciseInputs[exercise.id];
+    let defaultWeight = weightConfig.default;
+    let defaultReps = 10;
+    if (lastInputs) {
+      defaultWeight = Units.display(lastInputs.weight);
+      defaultReps = lastInputs.reps;
+    }
+
+    // Progress info
+    const currentXp = AppState.skillXp[skill.id] || 0;
+    const currentLevel = levelFromXp(currentXp);
+    const progress = progressToNextLevel(currentXp);
+    const progressColor = XpBarColors.getColor(progress);
+    const skillName = i18n.skillName(skill.id);
+
+    const setsTarget = currentItem.sets;
+    const setsDone = run.setsCompleted[run.currentIndex];
+    const exerciseNum = run.currentIndex + 1;
+    const totalExercises = run.items.length;
+
+    const isFirstExercise = run.currentIndex === 0;
+    const isLastExercise = run.currentIndex === run.items.length - 1;
+
+    content.innerHTML = `
+      <div class="plan-run-header">
+        <div class="plan-run-title">${run.planName}</div>
+        <div class="plan-run-progress">
+          ${i18n.t('plans.exercise_progress', { current: exerciseNum, total: totalExercises })}
+        </div>
+      </div>
+
+      <div class="plan-exercise-indicator">
+        <span class="plan-sets-progress">${i18n.t('plans.set_progress', { done: setsDone, target: setsTarget })}</span>
+      </div>
+
+      <div class="exercise-detail">
+        <div class="exercise-detail-name">
+          ${exercise.name}
+          <button class="favorite-btn${isFavorite ? ' active' : ''}" id="toggle-favorite">
+            ${isFavorite ? '&#x2605;' : '&#x2606;'}
+          </button>
+        </div>
+        <div class="exercise-detail-subcategory">${skillName}</div>
+
+        <div class="input-group">
+          <label class="input-label">${i18n.t('training.weight')} (${Units.label()})</label>
+          <div class="input-row">
+            <input type="range" class="input-slider" id="weight-slider"
+                   min="${weightConfig.min}" max="${weightConfig.max}"
+                   value="${defaultWeight}" step="${weightConfig.step}">
+            <input type="number" class="input-number" id="weight-input"
+                   value="${defaultWeight}" min="0" max="${weightConfig.max * 2}">
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label class="input-label">${i18n.t('training.reps')}</label>
+          <div class="input-row">
+            <input type="range" class="input-slider" id="reps-slider" min="1" max="30" value="${defaultReps}">
+            <input type="number" class="input-number" id="reps-input" value="${defaultReps}" min="1" max="100">
+          </div>
+        </div>
+
+        <button class="xp-tick-btn" id="plan-xp-tick-btn">${i18n.t('training.xp_tick')}</button>
+
+        <div class="exercise-xp-bar">
+          <div class="exercise-xp-bar-label">
+            <span>${skillName} Lv. ${currentLevel}</span>
+            <span>${progress}%</span>
+          </div>
+          <div class="exercise-xp-bar-track">
+            <div class="exercise-xp-bar-fill" id="exercise-xp-fill" style="width: ${progress}%; background: ${progressColor};"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="plan-nav-controls">
+        <button class="back-btn plan-nav-btn" id="plan-prev-btn" ${isFirstExercise ? 'disabled' : ''}>
+          &larr; ${i18n.t('plans.prev_exercise')}
+        </button>
+        <button class="back-btn plan-nav-btn" id="plan-next-btn">
+          ${isLastExercise ? i18n.t('plans.finish') : i18n.t('plans.next_exercise')} &rarr;
+        </button>
+      </div>
+
+      <button class="back-btn plan-exit-btn" id="plan-exit-btn">${i18n.t('plans.exit_plan')}</button>
+    `;
+
+    // Sync sliders
+    const weightSlider = content.querySelector('#weight-slider');
+    const weightInput = content.querySelector('#weight-input');
+    const repsSlider = content.querySelector('#reps-slider');
+    const repsInput = content.querySelector('#reps-input');
+
+    weightSlider.addEventListener('input', () => weightInput.value = weightSlider.value);
+    weightInput.addEventListener('input', () => weightSlider.value = Math.min(weightInput.value, weightConfig.max));
+    repsSlider.addEventListener('input', () => repsInput.value = repsSlider.value);
+    repsInput.addEventListener('input', () => repsSlider.value = Math.min(repsInput.value, 30));
+
+    // Favorite toggle
+    content.querySelector('#toggle-favorite').addEventListener('click', (e) => {
+      const btn = e.currentTarget;
+      if (AppState.favorites[exercise.id]) {
+        delete AppState.favorites[exercise.id];
+        btn.classList.remove('active');
+        btn.innerHTML = '&#x2606;';
+      } else {
+        AppState.favorites[exercise.id] = true;
+        btn.classList.add('active');
+        btn.innerHTML = '&#x2605;';
+      }
+      Storage.save();
+    });
+
+    // XP Tick during plan
+    content.querySelector('#plan-xp-tick-btn').addEventListener('click', () => {
+      const displayWeight = parseFloat(weightInput.value) || 0;
+      const weightKg = Units.toKg(displayWeight);
+      const reps = parseInt(repsInput.value) || 1;
+      this.performPlanXpTick(weightKg, reps);
+    });
+
+    // Navigation buttons
+    content.querySelector('#plan-prev-btn').addEventListener('click', () => {
+      if (run.currentIndex > 0) {
+        run.currentIndex--;
+        Storage.save();
+        this.showPlanExercise();
+      }
+    });
+
+    content.querySelector('#plan-next-btn').addEventListener('click', () => {
+      this.advancePlanExercise();
+    });
+
+    content.querySelector('#plan-exit-btn').addEventListener('click', () => {
+      if (confirm(i18n.t('plans.exit_confirm'))) {
+        this.endPlan();
+      }
+    });
+
     Modal.show('training-modal');
+  },
+
+  /**
+   * Perform XP tick during a plan run
+   */
+  performPlanXpTick(weight, reps) {
+    // Use TrainingFlow's XP tick logic
+    TrainingFlow.performXpTick(weight, reps);
+
+    // Increment sets completed for current exercise
+    const run = AppState.planRun;
+    if (run && run.active) {
+      run.setsCompleted[run.currentIndex]++;
+      Storage.save();
+
+      // Check if current exercise is complete
+      const currentItem = run.items[run.currentIndex];
+      if (run.setsCompleted[run.currentIndex] >= currentItem.sets) {
+        // Auto-advance after a brief delay
+        setTimeout(() => {
+          this.advancePlanExercise(true);
+        }, 800);
+      } else {
+        // Just refresh the display to update set count
+        this.showPlanExercise();
+      }
+    }
+  },
+
+  /**
+   * Advance to next exercise or complete plan
+   */
+  advancePlanExercise(auto = false) {
+    const run = AppState.planRun;
+    if (!run || !run.active) return;
+
+    const currentItem = run.items[run.currentIndex];
+    const setsDone = run.setsCompleted[run.currentIndex];
+
+    // If not auto-advancing and sets not complete, confirm skip
+    if (!auto && setsDone < currentItem.sets) {
+      if (!confirm(i18n.t('plans.skip_confirm', { done: setsDone, target: currentItem.sets }))) {
+        return;
+      }
+    }
+
+    // Check if this was the last exercise
+    if (run.currentIndex >= run.items.length - 1) {
+      this.showPlanComplete();
+    } else {
+      run.currentIndex++;
+      Storage.save();
+      this.showPlanExercise();
+    }
+  },
+
+  /**
+   * Show plan completion summary
+   */
+  showPlanComplete() {
+    const run = AppState.planRun;
+    if (!run) return;
+
+    const content = document.getElementById('training-flow-content');
+
+    // Calculate total sets completed
+    const totalSetsTarget = run.items.reduce((sum, item) => sum + item.sets, 0);
+    const totalSetsDone = run.setsCompleted.reduce((sum, done) => sum + done, 0);
+
+    let exerciseSummaryHtml = run.items.map((item, idx) => {
+      const exercise = getExerciseById(item.exerciseId);
+      const done = run.setsCompleted[idx];
+      const target = item.sets;
+      const complete = done >= target;
+      return `
+        <div class="plan-complete-exercise ${complete ? 'complete' : 'incomplete'}">
+          <span class="plan-complete-exercise-name">${exercise ? exercise.name : 'Unknown'}</span>
+          <span class="plan-complete-exercise-sets">${done}/${target}</span>
+        </div>
+      `;
+    }).join('');
+
+    content.innerHTML = `
+      <div class="plan-complete-modal">
+        <div class="plan-complete-title">${i18n.t('plans.complete_title')}</div>
+        <div class="plan-complete-name">${run.planName}</div>
+        <div class="plan-complete-summary">
+          <div class="plan-complete-stat">
+            <span class="plan-complete-stat-label">${i18n.t('plans.total_sets')}</span>
+            <span class="plan-complete-stat-value">${totalSetsDone} / ${totalSetsTarget}</span>
+          </div>
+        </div>
+        <div class="plan-complete-exercises">
+          ${exerciseSummaryHtml}
+        </div>
+        <button class="xp-tick-btn" id="plan-done-btn">${i18n.t('plans.done')}</button>
+      </div>
+    `;
+
+    content.querySelector('#plan-done-btn').addEventListener('click', () => {
+      this.endPlan();
+    });
+  },
+
+  /**
+   * End the current plan run
+   */
+  endPlan() {
+    AppState.planRun = null;
+    Storage.save();
+    Modal.hide('training-modal');
   }
 };
 
@@ -2251,7 +2983,6 @@ const CustomExercises = {
           </div>
 
           <div class="custom-exercise-actions">
-            <button class="back-btn" id="custom-cancel">${i18n.t('common.cancel')}</button>
             <button class="xp-tick-btn" id="custom-save">${i18n.t('common.save')}</button>
           </div>
         </div>
@@ -2270,10 +3001,6 @@ const CustomExercises = {
     const xpGroup = content.querySelector('#custom-xp-group');
     xpMode.addEventListener('change', () => {
       xpGroup.style.display = xpMode.value === 'custom' ? 'block' : 'none';
-    });
-
-    content.querySelector('#custom-cancel').addEventListener('click', () => {
-      Modal.hide('custom-exercise-modal');
     });
 
     content.querySelector('#custom-save').addEventListener('click', () => {
@@ -2495,14 +3222,10 @@ const StatisticsModal = {
     if (setHistory.length < 5) {
       content.innerHTML = `
         <div class="stats-empty">
-          <h3>${i18n.t('stats.title')}</h3>
-          <p>${i18n.t('stats.no_data')}</p>
-          <button class="back-btn" id="stats-close">${i18n.t('stats.close')}</button>
+          <h2 class="stats-title">${i18n.t('stats.title')}</h2>
+          <p class="stats-empty-text">${i18n.t('stats.no_data')}</p>
         </div>
       `;
-      content.querySelector('#stats-close').addEventListener('click', () => {
-        Modal.hide('statistics-modal');
-      });
       Modal.show('statistics-modal');
       return;
     }
@@ -2512,26 +3235,25 @@ const StatisticsModal = {
 
     content.innerHTML = `
       <div class="statistics-modal-content">
-        <h3 class="stats-modal-title">${i18n.t('stats.title')}</h3>
+        <h2 class="stats-title">${i18n.t('stats.title')}</h2>
 
-        <div class="stats-radar-container">
-          ${this.renderRadarChart(metrics)}
+        <div class="stats-section">
+          <div class="stats-radar-container">
+            ${this.renderRadarChart(metrics)}
+          </div>
         </div>
 
-        <div class="stats-muscle-changes">
-          <h4>${i18n.t('stats.muscle_changes')}</h4>
-          ${this.renderMuscleChanges()}
+        <div class="stats-section">
+          <h3 class="stats-section-title">${i18n.t('stats.muscle_changes')}</h3>
+          <div class="stats-muscle-list">
+            ${this.renderMuscleChanges()}
+          </div>
         </div>
-
-        <button class="back-btn stats-close-btn" id="stats-close">${i18n.t('stats.close')}</button>
       </div>
     `;
 
-    content.querySelector('#stats-close').addEventListener('click', () => {
-      Modal.hide('statistics-modal');
-    });
-
     Modal.show('statistics-modal');
+    this.attachMuscleRowHandlers();
   },
 
   /**
@@ -2655,14 +3377,255 @@ const StatisticsModal = {
 
     return SKILLS.map(skill => {
       const sets = muscleSets[skill.id] || 0;
-      const indicator = sets > 0 ? `<span class="muscle-change-up">${sets} ${i18n.t('stats.sets_week')}</span>` : `<span class="muscle-change-none">${i18n.t('stats.no_change')}</span>`;
+      const progression = this.getProgressionIndicators(skill.id);
+
+      let indicatorHtml = '';
+      if (sets > 0) {
+        indicatorHtml = `<span class="muscle-sets-count">${sets} ${i18n.t('stats.sets_week')}</span>`;
+      } else {
+        indicatorHtml = `<span class="muscle-change-none">${i18n.t('stats.no_change')}</span>`;
+      }
+
       return `
-        <div class="muscle-change-row">
+        <div class="muscle-change-row" data-muscle-id="${skill.id}">
           <span class="muscle-change-name">${i18n.skillName(skill.id)}</span>
-          ${indicator}
+          <div class="muscle-change-indicators">
+            ${progression}
+            ${indicatorHtml}
+          </div>
         </div>
       `;
     }).join('');
+  },
+
+  /**
+   * Get progression indicators comparing two most recent sets for a muscle
+   */
+  getProgressionIndicators(muscleId) {
+    const setHistory = AppState.setHistory || [];
+    const muscleSets = setHistory
+      .filter(s => s.muscleId === muscleId)
+      .sort((a, b) => b.ts - a.ts);
+
+    if (muscleSets.length < 2) return '';
+
+    const latest = muscleSets[0];
+    const previous = muscleSets[1];
+    const unit = AppState.settings?.weightUnit || 'kg';
+
+    let indicators = [];
+
+    // Weight change
+    if (latest.weight != null && previous.weight != null && latest.weight !== previous.weight) {
+      const diff = latest.weight - previous.weight;
+      if (diff > 0) {
+        indicators.push(`<span class="prog-indicator prog-up">▲+${diff}${unit}</span>`);
+      } else {
+        indicators.push(`<span class="prog-indicator prog-down">▼${diff}${unit}</span>`);
+      }
+    }
+
+    // Rep change
+    if (latest.reps != null && previous.reps != null && latest.reps !== previous.reps) {
+      const diff = latest.reps - previous.reps;
+      if (diff > 0) {
+        indicators.push(`<span class="prog-indicator prog-up">▲+${diff}r</span>`);
+      } else {
+        indicators.push(`<span class="prog-indicator prog-down">▼${diff}r</span>`);
+      }
+    }
+
+    return indicators.join('');
+  },
+
+  /**
+   * Attach click handlers for muscle rows
+   */
+  attachMuscleRowHandlers() {
+    document.querySelectorAll('.muscle-change-row[data-muscle-id]').forEach(row => {
+      row.addEventListener('click', () => {
+        const muscleId = row.dataset.muscleId;
+        this.showMuscleGraph(muscleId);
+      });
+    });
+  },
+
+  /**
+   * Show performance graph for a muscle
+   */
+  showMuscleGraph(muscleId) {
+    const skill = SKILLS.find(s => s.id === muscleId);
+    if (!skill) return;
+
+    const setHistory = AppState.setHistory || [];
+    const muscleSets = setHistory.filter(s => s.muscleId === muscleId);
+
+    const content = document.getElementById('muscle-graph-content');
+
+    if (muscleSets.length === 0) {
+      content.innerHTML = `
+        <div class="muscle-graph-modal">
+          <h2 class="graph-title">${i18n.skillName(muscleId)}</h2>
+          <p class="graph-empty">${i18n.t('stats.no_graph_data')}</p>
+        </div>
+      `;
+      Modal.show('muscle-graph-modal');
+      return;
+    }
+
+    // Aggregate performance per day
+    const dailyPerformance = this.calculateDailyPerformance(muscleSets);
+    const graphSvg = this.renderPerformanceGraph(dailyPerformance, muscleId);
+
+    content.innerHTML = `
+      <div class="muscle-graph-modal">
+        <h2 class="graph-title">${i18n.skillName(muscleId)}</h2>
+        <div class="graph-container">
+          ${graphSvg}
+        </div>
+        <div class="graph-tooltip" id="graph-tooltip"></div>
+      </div>
+    `;
+
+    Modal.show('muscle-graph-modal');
+    this.attachGraphTooltipHandlers(dailyPerformance);
+  },
+
+  /**
+   * Calculate daily performance (sum of weight × reps per day)
+   */
+  calculateDailyPerformance(sets) {
+    const dailyMap = {};
+
+    sets.forEach(s => {
+      const date = new Date(s.ts).toDateString();
+      const performance = (s.weight || 0) * (s.reps || 0);
+
+      if (!dailyMap[date]) {
+        dailyMap[date] = { ts: s.ts, performance: 0, sets: 0 };
+      }
+      dailyMap[date].performance += performance;
+      dailyMap[date].sets += 1;
+    });
+
+    // Convert to sorted array
+    return Object.entries(dailyMap)
+      .map(([date, data]) => ({
+        date,
+        ts: data.ts,
+        performance: data.performance,
+        sets: data.sets
+      }))
+      .sort((a, b) => a.ts - b.ts);
+  },
+
+  /**
+   * Render SVG line graph for performance
+   */
+  renderPerformanceGraph(data, muscleId) {
+    const width = 320;
+    const height = 180;
+    const padding = { top: 20, right: 20, bottom: 40, left: 50 };
+    const graphWidth = width - padding.left - padding.right;
+    const graphHeight = height - padding.top - padding.bottom;
+
+    if (data.length === 0) {
+      return `<svg class="performance-graph" viewBox="0 0 ${width} ${height}"></svg>`;
+    }
+
+    const maxPerf = Math.max(...data.map(d => d.performance)) || 1;
+    const minPerf = 0;
+
+    // Calculate points
+    const points = data.map((d, i) => {
+      const x = padding.left + (data.length === 1 ? graphWidth / 2 : (i / (data.length - 1)) * graphWidth);
+      const y = padding.top + graphHeight - ((d.performance - minPerf) / (maxPerf - minPerf)) * graphHeight;
+      return { x, y, ...d };
+    });
+
+    // Create path
+    const linePath = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
+
+    // Create area fill
+    const areaPath = `${linePath} L ${points[points.length - 1].x} ${padding.top + graphHeight} L ${points[0].x} ${padding.top + graphHeight} Z`;
+
+    // Grid lines
+    const gridLines = [];
+    for (let i = 0; i <= 4; i++) {
+      const y = padding.top + (i / 4) * graphHeight;
+      const value = Math.round(maxPerf - (i / 4) * maxPerf);
+      gridLines.push(`
+        <line x1="${padding.left}" y1="${y}" x2="${width - padding.right}" y2="${y}" class="graph-grid-line"/>
+        <text x="${padding.left - 8}" y="${y + 4}" class="graph-axis-label" text-anchor="end">${value}</text>
+      `);
+    }
+
+    // Date labels (show first, middle, last)
+    const dateLabels = [];
+    if (data.length >= 1) {
+      const indices = data.length === 1 ? [0] : data.length === 2 ? [0, 1] : [0, Math.floor(data.length / 2), data.length - 1];
+      indices.forEach(i => {
+        const p = points[i];
+        const dateStr = new Date(data[i].ts).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+        dateLabels.push(`<text x="${p.x}" y="${height - 10}" class="graph-axis-label" text-anchor="middle">${dateStr}</text>`);
+      });
+    }
+
+    // Data points
+    const dataPoints = points.map((p, i) => `
+      <circle cx="${p.x}" cy="${p.y}" r="5" class="graph-point" data-index="${i}"/>
+    `).join('');
+
+    return `
+      <svg class="performance-graph" viewBox="0 0 ${width} ${height}">
+        <!-- Grid -->
+        ${gridLines.join('')}
+
+        <!-- Area fill -->
+        <path d="${areaPath}" class="graph-area"/>
+
+        <!-- Line -->
+        <path d="${linePath}" class="graph-line"/>
+
+        <!-- Points -->
+        ${dataPoints}
+
+        <!-- Date labels -->
+        ${dateLabels.join('')}
+      </svg>
+    `;
+  },
+
+  /**
+   * Attach tooltip handlers for graph points
+   */
+  attachGraphTooltipHandlers(data) {
+    const tooltip = document.getElementById('graph-tooltip');
+    const unit = AppState.settings?.weightUnit || 'kg';
+
+    document.querySelectorAll('.graph-point').forEach(point => {
+      const index = parseInt(point.dataset.index);
+      const d = data[index];
+
+      point.addEventListener('mouseenter', (e) => {
+        const dateStr = new Date(d.ts).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+        tooltip.innerHTML = `
+          <div class="tooltip-date">${dateStr}</div>
+          <div class="tooltip-perf">${d.performance.toLocaleString()} ${unit}×reps</div>
+          <div class="tooltip-sets">${d.sets} ${d.sets === 1 ? 'set' : 'sets'}</div>
+        `;
+        tooltip.classList.add('visible');
+
+        const rect = point.getBoundingClientRect();
+        const container = document.querySelector('.graph-container').getBoundingClientRect();
+        tooltip.style.left = `${rect.left - container.left + rect.width / 2}px`;
+        tooltip.style.top = `${rect.top - container.top - 60}px`;
+      });
+
+      point.addEventListener('mouseleave', () => {
+        tooltip.classList.remove('visible');
+      });
+    });
   }
 };
 
@@ -3038,6 +4001,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Check if we should show intro modal
   IntroModal.checkAndShow();
+
+  // Check if there's an in-progress plan run to resume
+  if (AppState.planRun && AppState.planRun.active) {
+    setTimeout(() => {
+      if (confirm(i18n.t('plans.resume_confirm', { name: AppState.planRun.planName }))) {
+        TrainingPlans.resumePlan();
+      } else {
+        // User declined, clear the plan run
+        AppState.planRun = null;
+        Storage.save();
+      }
+    }, 500);
+  }
 
   // Expose reset function globally for testing
   window.resetXPGains = Storage.reset.bind(Storage);
