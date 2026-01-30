@@ -885,14 +885,46 @@ const LogScreen = {
   },
 
   createLogEntry(entry, prevEntry) {
-    const exercise = getExerciseById(entry.exerciseId);
     const skill = getSkillById(entry.skillId);
-    const subcategory = getSubcategoryById(entry.subcategoryId);
     const skillName = skill ? i18n.skillName(skill.id) : '';
     const time = new Date(entry.timestamp).toLocaleTimeString('en-US', {
       hour: '2-digit',
       minute: '2-digit'
     });
+
+    // Handle bonus entries (challenge/variation) differently
+    // Also check for legacy entries that may not have the flag but have special exerciseId
+    const isChallengeBonus = entry.isChallengeBonus || entry.exerciseId === 'challenge_bonus';
+    const isVariationBonus = entry.isVariationBonus || entry.exerciseId === 'variation_bonus';
+    if (isChallengeBonus || isVariationBonus) {
+      const bonusType = isChallengeBonus ? 'Challenge Bonus' : 'Variation Bonus';
+      const el = document.createElement('div');
+      el.className = 'log-entry log-entry-bonus';
+      el.innerHTML = `
+        <div class="log-entry-main">
+          <div class="log-entry-exercise">${bonusType}</div>
+          <div class="log-entry-details">${skillName}</div>
+          <div class="log-entry-time">${time}</div>
+        </div>
+        <div class="log-entry-right">
+          <div class="log-entry-xp log-entry-xp-bonus">+${entry.xpAwarded} XP</div>
+          <div class="log-entry-skill-label">${skillName}</div>
+          <button class="log-undo-btn" data-entry-id="${entry.id}">${i18n.t('log.undo')}</button>
+        </div>
+      `;
+
+      // Add undo click handler
+      el.querySelector('.log-undo-btn').addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.undoEntry(entry);
+      });
+
+      return el;
+    }
+
+    // Regular exercise entry
+    const exercise = getExerciseById(entry.exerciseId);
+    const subcategory = getSubcategoryById(entry.subcategoryId);
 
     // Check for progressive overload indicators (weight increase only)
     let indicator = '';
@@ -1813,8 +1845,9 @@ const TrainingFlow = {
       exerciseId: exerciseId
     };
 
-    // Go directly to exercise detail
+    // Go directly to exercise detail and show modal
     this.showExerciseDetail();
+    Modal.show('training-modal');
   },
 
   // New: Single screen with subgroup headers and exercises
@@ -2112,10 +2145,17 @@ const TrainingFlow = {
 
     // Update challenge progress if active
     if (AppState.challenge) {
-      ChallengesScreen.updateProgress(skillId, exerciseId);
+      // Check if this exercise is part of the challenge
+      const isPartOfChallenge = AppState.challenge.muscles.some(m =>
+        m.skillId === skillId && m.exercises.some(e => e.exerciseId === exerciseId)
+      );
 
-      // Track total XP gained during challenge
-      AppState.challenge.xpGained = (AppState.challenge.xpGained || 0) + xpGained;
+      if (isPartOfChallenge) {
+        ChallengesScreen.updateProgress(skillId, exerciseId);
+
+        // Track total XP gained during challenge (only for challenge exercises)
+        AppState.challenge.xpGained = (AppState.challenge.xpGained || 0) + xpGained;
+      }
 
       // Check if in challenge training mode
       if (AppState.challengeTraining && AppState.challengeTraining.exerciseId === exerciseId) {
@@ -2392,11 +2432,17 @@ const ChallengesScreen = {
     `;
 
     // Click handlers for exercises - start training flow
-    container.querySelectorAll('.challenge-exercise.clickable').forEach(el => {
-      el.addEventListener('click', () => {
+    const clickableExercises = container.querySelectorAll('.challenge-exercise.clickable');
+    console.log('ChallengesScreen: Found', clickableExercises.length, 'clickable exercises');
+
+    clickableExercises.forEach(el => {
+      el.addEventListener('click', (e) => {
+        e.stopPropagation();
         const skillId = el.dataset.skillId;
         const exerciseId = el.dataset.exerciseId;
         const remaining = parseInt(el.dataset.remaining);
+
+        console.log('ChallengesScreen: Clicked exercise:', exerciseId, 'skill:', skillId, 'remaining:', remaining);
 
         // Store context for challenge mode
         AppState.challengeTraining = {
@@ -4175,7 +4221,7 @@ const FriendsScreen = {
       name: sanitizedName,
       updatedAt: new Date().toISOString(),
       skills: {},
-      appVersion: '0.07'
+      appVersion: '0.08'
     };
 
     SKILLS.forEach(skill => {
@@ -4815,5 +4861,5 @@ document.addEventListener('DOMContentLoaded', () => {
   // Expose reset function globally for testing
   window.resetXPGains = Storage.reset.bind(Storage);
 
-  console.log('XPGains v0.07 initialized. Use resetXPGains() to clear all data.');
+  console.log('XPGains v0.08 initialized. Use resetXPGains() to clear all data.');
 });

@@ -445,7 +445,9 @@ back_erector → skill_erectors.png
 - `v4/` - v0.4 implementation (January 28, 2026)
 - `v5/` - v0.5 implementation (January 28, 2026)
 - `v6/` - v0.06 implementation (January 29, 2026)
-- `v7/` - Current v0.07 implementation (January 29, 2026)
+- `v7/` - v0.07 implementation (January 29, 2026)
+- `v8/` - v0.08 implementation (January 30, 2026)
+- `v8-bugfix/` - v0.08 with bug fixes (January 30, 2026) - Current
 
 ---
 
@@ -477,6 +479,10 @@ back_erector → skill_erectors.png
   - Removed "▲ Reps up" indicator (kept "Weight up" only)
 - **Meta/PWA Updates**:
   - Description changed to "Earn XP from your workouts and level up"
+- **Bug Fixes**:
+  - Fixed: Clicking exercises in challenge tab now properly opens training modal
+  - Fixed: Challenge bonus entries no longer show as "Unknown" in log (handles legacy entries)
+  - Fixed: Challenge XP tracking now only counts XP from challenge exercises (not all exercises)
 
 ### v0.07 (January 29, 2026)
 - **New User Onboarding Animations**:
@@ -587,6 +593,6 @@ back_erector → skill_erectors.png
 
 ---
 
-*Last updated: January 29, 2026 (v0.07)*
+*Last updated: January 30, 2026 (v0.08)*
 *Created by: Claude Code*
 *© 2026 Gerbert Guliyev. All rights reserved.*

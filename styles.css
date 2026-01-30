@@ -2389,6 +2389,19 @@ body {
   color: var(--accent-xp);
 }
 
+.log-entry-xp-bonus {
+  color: var(--accent-gold);
+}
+
+.log-entry-bonus {
+  background: rgba(255, 215, 0, 0.05);
+  border-left: 3px solid var(--accent-gold);
+}
+
+.log-entry-bonus .log-entry-exercise {
+  color: var(--accent-gold);
+}
+
 .log-entry-skill-label {
   font-size: 11px;
   color: var(--accent-xp);
