@@ -78,6 +78,21 @@ function LogEntryItem({ entry }: { entry: LogEntry }) {
 }
 
 /**
+ * Safely parse a timestamp string to a formatted date
+ */
+function safeFormatDate(dateStr: string): string {
+  const timestamp = parseInt(dateStr, 10);
+  if (isNaN(timestamp)) {
+    return 'Unknown Date';
+  }
+  const date = new Date(timestamp);
+  if (isNaN(date.getTime())) {
+    return 'Invalid Date';
+  }
+  return formatDate(date, 'long');
+}
+
+/**
  * Day group component
  */
 function DayGroup({
@@ -92,7 +107,7 @@ function DayGroup({
   return (
     <View style={styles.dayGroup}>
       <View style={styles.dayHeader}>
-        <Text style={styles.dayDate}>{formatDate(new Date(parseInt(date)), 'long')}</Text>
+        <Text style={styles.dayDate}>{safeFormatDate(date)}</Text>
         <Text style={styles.dayXp}>+{totalXp} XP</Text>
       </View>
       {entries.map(entry => (

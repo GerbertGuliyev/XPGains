@@ -127,7 +127,7 @@ export default function SettingsScreen() {
         />
         <SettingsRow
           label="Language"
-          value={state.settings.language.toUpperCase()}
+          value={(state.settings.language || 'en').toUpperCase()}
         />
       </SettingsSection>
 

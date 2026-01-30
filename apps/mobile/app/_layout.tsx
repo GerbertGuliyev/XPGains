@@ -17,7 +17,9 @@ export default function RootLayout() {
 
   useEffect(() => {
     initialize();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // Note: initialize is stable from Zustand, but included for completeness
+  }, [initialize]);
 
   // Show loading screen while initializing
   if (isLoading || !isInitialized) {

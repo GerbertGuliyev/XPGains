@@ -46,8 +46,8 @@ export default function WorkoutScreen() {
   // Handle exercise selection
   const handleExerciseSelect = (exercise: Exercise) => {
     setSelectedExercise(exercise);
-    // Set default weight
-    const defaultKg = exercise.weight.default;
+    // Set default weight (with fallback for exercises without weight config)
+    const defaultKg = exercise.weight?.default ?? 20;
     setWeight(isLbs ? kgToLbs(defaultKg).toString() : defaultKg.toString());
     setReps('10');
     setStep('input');
@@ -82,13 +82,21 @@ export default function WorkoutScreen() {
     // Convert to kg if needed
     const weightKg = isLbs ? lbsToKg(weightNum) : weightNum;
 
-    completeSet(selectedExercise.id, {
+    const result = completeSet(selectedExercise.id, {
       exerciseId: selectedExercise.id,
       reps: repsNum,
       weightKg,
     });
 
-    Alert.alert('Set Logged!', `+XP awarded to ${selectedMuscle}`, [
+    if (!result.success) {
+      Alert.alert('Error', result.error?.message || 'Failed to log set. Please try again.');
+      return;
+    }
+
+    // Get the display name for the muscle
+    const skillName = SKILLS.find(s => s.id === selectedMuscle)?.name || selectedMuscle;
+
+    Alert.alert('Set Logged!', `+XP awarded to ${skillName}`, [
       {
         text: 'Log Another Set',
         onPress: () => {
@@ -148,29 +156,33 @@ export default function WorkoutScreen() {
           <Text style={styles.backText}>← Back</Text>
         </Pressable>
 
-        <Text style={styles.title}>{muscle?.name}</Text>
+        <Text style={styles.title}>{muscle?.name ?? 'Unknown Muscle'}</Text>
         <Text style={styles.subtitle}>Select an exercise</Text>
 
         <View style={styles.exerciseList}>
-          {exercises.map(exercise => {
-            const isFavorite = state.favorites[exercise.id];
+          {exercises.length === 0 ? (
+            <Text style={styles.emptyText}>No exercises available for this muscle group</Text>
+          ) : (
+            exercises.map(exercise => {
+              const isFavorite = state.favorites[exercise.id];
 
-            return (
-              <Pressable
-                key={exercise.id}
-                style={styles.exerciseCard}
-                onPress={() => handleExerciseSelect(exercise)}
-              >
-                <View style={styles.exerciseInfo}>
-                  <Text style={styles.exerciseName}>{exercise.name}</Text>
-                  <Text style={styles.exerciseType}>
-                    {exercise.type === 'compound' ? 'Compound' : 'Isolation'}
-                  </Text>
-                </View>
-                {isFavorite && <Text style={styles.favoriteIcon}>⭐</Text>}
-              </Pressable>
-            );
-          })}
+              return (
+                <Pressable
+                  key={exercise.id}
+                  style={styles.exerciseCard}
+                  onPress={() => handleExerciseSelect(exercise)}
+                >
+                  <View style={styles.exerciseInfo}>
+                    <Text style={styles.exerciseName}>{exercise.name}</Text>
+                    <Text style={styles.exerciseType}>
+                      {exercise.type === 'compound' ? 'Compound' : 'Isolation'}
+                    </Text>
+                  </View>
+                  {isFavorite && <Text style={styles.favoriteIcon}>⭐</Text>}
+                </Pressable>
+              );
+            })
+          )}
         </View>
       </ScrollView>
     );
@@ -342,5 +354,11 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     color: '#000',
+  },
+  emptyText: {
+    color: '#888',
+    fontSize: 16,
+    textAlign: 'center',
+    padding: 20,
   },
 });

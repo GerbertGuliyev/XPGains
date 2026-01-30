@@ -46,16 +46,31 @@ import {
  * AsyncStorage adapter for @xpgains/core
  */
 const asyncStorageAdapter = {
-  getItem: async (key: string) => AsyncStorage.getItem(key),
-  setItem: async (key: string, value: string) => AsyncStorage.setItem(key, value),
-  removeItem: async (key: string) => AsyncStorage.removeItem(key),
-  getAllKeys: async () => AsyncStorage.getAllKeys() as Promise<string[]>,
+  getItem: async (key: string): Promise<string | null> => AsyncStorage.getItem(key),
+  setItem: async (key: string, value: string): Promise<void> => {
+    await AsyncStorage.setItem(key, value);
+  },
+  removeItem: async (key: string): Promise<void> => {
+    await AsyncStorage.removeItem(key);
+  },
+  getAllKeys: async (): Promise<string[]> => {
+    const keys = await AsyncStorage.getAllKeys();
+    return keys as string[];
+  },
 };
 
 /**
  * Storage instance
  */
 const storage = new StateStorage(asyncStorageAdapter);
+
+/**
+ * Result type for operations that can fail
+ */
+interface OperationResult {
+  success: boolean;
+  error?: Error;
+}
 
 /**
  * Store interface
@@ -65,6 +80,8 @@ interface GameStore {
   state: GameState;
   isLoading: boolean;
   isInitialized: boolean;
+  isSaving: boolean;
+  saveError: Error | null;
   recentSets: RecentSet[];
   logEntries: LogEntry[];
 
@@ -72,7 +89,7 @@ interface GameStore {
   initialize: () => Promise<void>;
 
   // XP Actions
-  completeSet: (exerciseId: string, set: SetInput) => void;
+  completeSet: (exerciseId: string, set: SetInput) => OperationResult;
   undoLogEntry: (logEntry: LogEntry) => void;
 
   // Settings
@@ -118,11 +135,34 @@ interface GameStore {
 /**
  * Create the game store
  */
+/**
+ * Helper to persist state with error tracking
+ * Uses fire-and-forget but tracks errors for UI feedback
+ */
+const persistState = (
+  newState: GameState,
+  setFn: (partial: Partial<GameStore>) => void
+): void => {
+  setFn({ isSaving: true, saveError: null });
+
+  storage
+    .saveState(newState)
+    .then(() => {
+      setFn({ isSaving: false });
+    })
+    .catch((error: Error) => {
+      console.error('Failed to persist state:', error);
+      setFn({ isSaving: false, saveError: error });
+    });
+};
+
 export const useGameStore = create<GameStore>((set, get) => ({
   // Initial state
   state: createInitialState(),
   isLoading: true,
   isInitialized: false,
+  isSaving: false,
+  saveError: null,
   recentSets: [],
   logEntries: [],
 
@@ -149,8 +189,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
   /**
    * Complete a set and award XP
+   * Returns success/failure so UI can show appropriate feedback
    */
-  completeSet: (exerciseId: string, setInput: SetInput) => {
+  completeSet: (exerciseId: string, setInput: SetInput): OperationResult => {
     const { state, recentSets, logEntries } = get();
 
     try {
@@ -173,10 +214,14 @@ export const useGameStore = create<GameStore>((set, get) => ({
         logEntries: [...logEntries, result.logEntry],
       });
 
-      // Persist
-      storage.saveState(result.newState);
+      // Persist (fire-and-forget with error tracking)
+      persistState(result.newState, set);
+
+      return { success: true };
     } catch (error) {
-      console.error('Failed to complete set:', error);
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Failed to complete set:', err);
+      return { success: false, error: err };
     }
   },
 
@@ -194,7 +239,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       logEntries: newLogEntries,
     });
 
-    storage.saveState(newState);
+    persistState(newState, set);
   },
 
   /**
@@ -205,7 +250,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const newState = updateSettings(state, settings);
 
     set({ state: newState });
-    storage.saveState(newState);
+    persistState(newState, set);
   },
 
   /**
@@ -216,7 +261,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const newState = toggleFavorite(state, exerciseId);
 
     set({ state: newState });
-    storage.saveState(newState);
+    persistState(newState, set);
   },
 
   /**
@@ -228,7 +273,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const newState = setChallenge(state, challenge);
 
     set({ state: newState });
-    storage.saveState(newState);
+    persistState(newState, set);
   },
 
   /**
@@ -239,7 +284,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const newState = setChallenge(state, null);
 
     set({ state: newState });
-    storage.saveState(newState);
+    persistState(newState, set);
   },
 
   /**
@@ -250,7 +295,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const newState = addCustomExercise(state, exercise);
 
     set({ state: newState });
-    storage.saveState(newState);
+    persistState(newState, set);
   },
 
   /**
@@ -261,7 +306,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const newState = removeCustomExercise(state, exerciseId);
 
     set({ state: newState });
-    storage.saveState(newState);
+    persistState(newState, set);
   },
 
   /**
@@ -272,7 +317,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const newState = addTrainingPlan(state, plan);
 
     set({ state: newState });
-    storage.saveState(newState);
+    persistState(newState, set);
   },
 
   /**
@@ -283,7 +328,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const newState = updateTrainingPlan(state, plan);
 
     set({ state: newState });
-    storage.saveState(newState);
+    persistState(newState, set);
   },
 
   /**
@@ -294,7 +339,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const newState = removeTrainingPlan(state, planId);
 
     set({ state: newState });
-    storage.saveState(newState);
+    persistState(newState, set);
   },
 
   /**
@@ -305,7 +350,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const newState = updateEquipment(state, enabled, available);
 
     set({ state: newState });
-    storage.saveState(newState);
+    persistState(newState, set);
   },
 
   /**
@@ -316,7 +361,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const newState = updateProfile(state, displayName);
 
     set({ state: newState });
-    storage.saveState(newState);
+    persistState(newState, set);
   },
 
   /**
@@ -327,7 +372,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const newState = updateBody(state, body);
 
     set({ state: newState });
-    storage.saveState(newState);
+    persistState(newState, set);
   },
 
   /**
@@ -338,7 +383,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const newState = calibrateSkills(state, skillLevels);
 
     set({ state: newState });
-    storage.saveState(newState);
+    persistState(newState, set);
   },
 
   /**
@@ -354,7 +399,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       logEntries: [],
     });
 
-    storage.saveState(newState);
+    persistState(newState, set);
   },
 
   /**
@@ -365,7 +410,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const newState = markSynced(state);
 
     set({ state: newState });
-    storage.saveState(newState);
+    persistState(newState, set);
   },
 
   /**
