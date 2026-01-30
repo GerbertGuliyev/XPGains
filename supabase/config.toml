@@ -1,0 +1,56 @@
+# Supabase CLI configuration for XPGains
+
+[api]
+# Port to use for the API URL
+port = 54321
+# Schemas to expose in your API
+schemas = ["public"]
+# Extra schemas to add to the search path
+extra_search_path = ["public"]
+# Maximum number of rows to return from a view, table, or stored procedure
+max_rows = 1000
+
+[db]
+# Port to use for the local database URL
+port = 54322
+# The database major version to use
+major_version = 15
+
+[studio]
+# Port to use for Supabase Studio
+port = 54323
+
+[inbucket]
+# Port to use for the inbucket email testing server
+port = 54324
+
+[storage]
+# Enable or disable storage
+enabled = true
+
+[auth]
+# Enable or disable auth
+enabled = true
+# The base URL of your site
+site_url = "http://localhost:3000"
+# Additional redirect URLs
+additional_redirect_urls = ["exp://localhost:8081"]
+# JWT expiry time in seconds
+jwt_expiry = 3600
+# Enable or disable signup
+enable_signup = true
+
+[auth.email]
+# Enable or disable email auth
+enable_signup = true
+# Require email confirmation
+double_confirm_changes = true
+enable_confirmations = false
+
+[auth.sms]
+# Enable or disable phone auth
+enable_signup = false
+enable_confirmations = false
+
+[analytics]
+enabled = false
