@@ -483,6 +483,8 @@ back_erector → skill_erectors.png
   - Fixed: Clicking exercises in challenge tab now properly opens training modal
   - Fixed: Challenge bonus entries no longer show as "Unknown" in log (handles legacy entries)
   - Fixed: Challenge XP tracking now only counts XP from challenge exercises (not all exercises)
+  - Fixed: Added missing `Navigation.goTo()` method - challenge progress now updates correctly
+  - Fixed: Back button in exercise detail returns to challenges screen when in challenge mode
 
 ### v0.07 (January 29, 2026)
 - **New User Onboarding Animations**:

@@ -649,6 +649,13 @@ const Navigation = {
     this.switchTab('muscle-map');
   },
 
+  // Navigate to a screen by its full ID (e.g., 'challenges-screen')
+  goTo(screenId) {
+    // Extract tab name from screen ID (e.g., 'challenges-screen' -> 'challenges')
+    const tabName = screenId.replace('-screen', '');
+    this.switchTab(tabName);
+  },
+
   switchTab(tabName) {
     // Update nav tabs
     document.querySelectorAll('.nav-tab').forEach(tab => {
@@ -2025,9 +2032,17 @@ const TrainingFlow = {
       repsSlider.value = Math.min(repsInput.value, 30);
     });
 
-    // Back button
+    // Back button - return to challenges screen if in challenge mode
     content.querySelector('#back-to-exercises').addEventListener('click', () => {
-      this.showExerciseList();
+      if (AppState.challengeTraining) {
+        // Clear challenge training state and return to challenges
+        AppState.challengeTraining = null;
+        Modal.hide('training-modal');
+        Navigation.goTo('challenges-screen');
+        ChallengesScreen.render();
+      } else {
+        this.showExerciseList();
+      }
     });
 
     // Favorite toggle
