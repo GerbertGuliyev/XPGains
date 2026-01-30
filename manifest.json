@@ -1,7 +1,7 @@
 {
   "name": "XPGains",
   "short_name": "XPGains",
-  "description": "Train your muscles like an RPG hero",
+  "description": "Earn XP from your workouts and level up",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",

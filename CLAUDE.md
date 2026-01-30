@@ -6,7 +6,7 @@
 
 The app rewards users with XP for logging workout sets, calculated based on weight lifted, reps performed, and exercise type. The visual design mimics OSRS's distinctive aesthetic, including the characteristic skill card grid layout.
 
-**Current Version:** v0.07
+**Current Version:** v0.08
 
 ---
 
@@ -450,6 +450,33 @@ back_erector → skill_erectors.png
 ---
 
 ## Version History
+
+### v0.08 (January 30, 2026)
+- **Enhanced Onboarding Animations**:
+  - Updated subtitle text: "Select a muscle to train and begin leveling up"
+  - Slower text glow wave (5 seconds, letter-by-letter white highlight)
+  - Subtle metallic shine effect passes through muscle fill
+  - Thinner white outline trace on muscle boundaries
+  - No auto-switching views (stays on user's current view)
+  - 0.5 second delay before opening training modal to show highlight
+  - Animations restart when clicking empty space (if still new user)
+- **Challenge System Overhaul**:
+  - Renamed "Active Quest" → "Goal"
+  - Clickable exercises in challenge view to start training directly
+  - Auto-close and return to challenges when target sets completed
+  - "Complete Quest!" → "CLAIM XP REWARD" button
+  - Challenge bonus XP: 33.3% of total XP gained, awarded to random challenge muscle
+  - Updated completion message: "Success! You earned {bonus} XP..."
+- **New Bonus Systems**:
+  - **Consistency Bonus**: Double XP for 4 ticks when trained 7+ days in last 14 days
+  - **Variation Bonus**: 300 XP reward when diversity score > 70%, popup to choose any skill
+  - Bonuses module with check/apply/claim functions
+- **German Translation Updates**:
+  - Nav: "Statistiken" → "Levels", "Muskelkarte" → "Muskelauswahl"
+- **Log Improvements**:
+  - Removed "▲ Reps up" indicator (kept "Weight up" only)
+- **Meta/PWA Updates**:
+  - Description changed to "Earn XP from your workouts and level up"
 
 ### v0.07 (January 29, 2026)
 - **New User Onboarding Animations**:

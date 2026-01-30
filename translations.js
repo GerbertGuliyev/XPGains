@@ -102,12 +102,18 @@ const I18N = {
       'challenges.regular_desc': '2 muscles, 3 exercises each, 3-4 sets per exercise',
       'challenges.ironman_desc': '3 muscles, 4 exercises each, 4 sets per exercise',
       'challenges.start': 'Start Workout Challenge',
-      'challenges.active_quest': 'Active Quest',
+      'challenges.active_quest': 'Goal',
       'challenges.sets_completed': '{completed} / {total} sets completed',
-      'challenges.abandon': 'Abandon Quest',
-      'challenges.abandon_confirm': 'Abandon this quest? Progress will be lost.',
-      'challenges.complete': 'Complete Quest!',
-      'challenges.completed_msg': 'Quest completed! Great workout!',
+      'challenges.abandon': 'Abandon Goal',
+      'challenges.abandon_confirm': 'Abandon this goal? Progress will be lost.',
+      'challenges.complete': 'CLAIM XP REWARD',
+      'challenges.completed_msg': 'Success! You earned {bonus} XP for completing this challenge.',
+
+      // Bonuses
+      'bonuses.variation_title': 'Variation Bonus!',
+      'bonuses.variation_desc': 'Great muscle variety! Choose a skill to award 300 XP:',
+      'bonuses.variation_claimed': '+{xp} XP awarded to {skill}!',
+      'bonuses.consistency_active': 'Consistency Bonus Active! Double XP for {ticks} more ticks',
 
       // Friends Screen
       'friends.title': 'Friends',
@@ -255,8 +261,8 @@ const I18N = {
     // German
     de: {
       // Navigation
-      'nav.muscle_map': 'Muskelkarte',
-      'nav.stats_card': 'Statistiken',
+      'nav.muscle_map': 'Muskelauswahl',
+      'nav.stats_card': 'Levels',
       'nav.log': 'Protokoll',
       'nav.challenges': 'Herausforderungen',
       'nav.friends': 'Freunde',
@@ -325,12 +331,18 @@ const I18N = {
       'challenges.regular_desc': '2 Muskeln, 3 Übungen je, 3-4 Sätze pro Übung',
       'challenges.ironman_desc': '3 Muskeln, 4 Übungen je, 4 Sätze pro Übung',
       'challenges.start': 'Workout-Challenge starten',
-      'challenges.active_quest': 'Aktive Quest',
+      'challenges.active_quest': 'Ziel',
       'challenges.sets_completed': '{completed} / {total} Sätze abgeschlossen',
-      'challenges.abandon': 'Quest abbrechen',
-      'challenges.abandon_confirm': 'Diese Quest abbrechen? Fortschritt geht verloren.',
-      'challenges.complete': 'Quest abschließen!',
-      'challenges.completed_msg': 'Quest abgeschlossen! Tolles Training!',
+      'challenges.abandon': 'Ziel abbrechen',
+      'challenges.abandon_confirm': 'Dieses Ziel abbrechen? Fortschritt geht verloren.',
+      'challenges.complete': 'XP-BELOHNUNG EINLÖSEN',
+      'challenges.completed_msg': 'Erfolg! Du hast {bonus} XP für diese Challenge verdient.',
+
+      // Bonuses
+      'bonuses.variation_title': 'Variations-Bonus!',
+      'bonuses.variation_desc': 'Tolle Muskelvielfalt! Wähle einen Skill für 300 XP:',
+      'bonuses.variation_claimed': '+{xp} XP an {skill} vergeben!',
+      'bonuses.consistency_active': 'Konsistenz-Bonus aktiv! Doppeltes XP für {ticks} weitere Ticks',
 
       // Friends Screen
       'friends.title': 'Freunde',
@@ -552,12 +564,18 @@ const I18N = {
       'challenges.regular_desc': '2 мышцы, 3 упражнения каждая, 3-4 подхода',
       'challenges.ironman_desc': '3 мышцы, 4 упражнения каждая, 4 подхода',
       'challenges.start': 'Начать задачу',
-      'challenges.active_quest': 'Активный квест',
+      'challenges.active_quest': 'Цель',
       'challenges.sets_completed': '{completed} / {total} подходов выполнено',
-      'challenges.abandon': 'Отменить квест',
-      'challenges.abandon_confirm': 'Отменить этот квест? Прогресс будет потерян.',
-      'challenges.complete': 'Завершить квест!',
-      'challenges.completed_msg': 'Квест завершён! Отличная тренировка!',
+      'challenges.abandon': 'Отменить цель',
+      'challenges.abandon_confirm': 'Отменить эту цель? Прогресс будет потерян.',
+      'challenges.complete': 'ПОЛУЧИТЬ XP',
+      'challenges.completed_msg': 'Успех! Вы заработали {bonus} XP за выполнение задачи.',
+
+      // Bonuses
+      'bonuses.variation_title': 'Бонус за разнообразие!',
+      'bonuses.variation_desc': 'Отличное разнообразие мышц! Выберите навык для 300 XP:',
+      'bonuses.variation_claimed': '+{xp} XP присуждено {skill}!',
+      'bonuses.consistency_active': 'Бонус за постоянство активен! Двойной XP для {ticks} тиков',
 
       // Friends Screen
       'friends.title': 'Друзья',

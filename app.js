@@ -36,6 +36,9 @@ const AppState = {
     exerciseId: null
   },
 
+  // Challenge training mode (when starting exercise from challenges)
+  challengeTraining: null,
+
   // Active challenge
   challenge: null,
 
@@ -60,7 +63,17 @@ const AppState = {
   equipment: ['bodyweight'], // Default to bodyweight only
 
   // Active plan run state
-  planRun: null
+  planRun: null,
+
+  // Consistency bonus state (double XP for 4 ticks)
+  consistencyBonus: {
+    active: false,
+    ticksRemaining: 0,
+    lastChecked: null
+  },
+
+  // Variation bonus (unclaimed 300 XP reward)
+  variationBonusPending: false
   // Structure when active:
   // {
   //   planId: string,
@@ -881,13 +894,11 @@ const LogScreen = {
       minute: '2-digit'
     });
 
-    // Check for progressive overload indicators
+    // Check for progressive overload indicators (weight increase only)
     let indicator = '';
     if (prevEntry && prevEntry.exerciseId === entry.exerciseId) {
       if (entry.weight > prevEntry.weight) {
         indicator = `<span class="log-entry-indicator indicator-up">${i18n.t('log.weight_up')}</span>`;
-      } else if (entry.weight === prevEntry.weight && entry.reps > prevEntry.reps) {
-        indicator = `<span class="log-entry-indicator indicator-up">${i18n.t('log.reps_up')}</span>`;
       }
     }
 
@@ -1572,6 +1583,183 @@ const MuscleMap = {
 };
 
 // ============================================
+// BONUSES SYSTEM
+// Consistency and Variation bonuses
+// ============================================
+const Bonuses = {
+  /**
+   * Check if user qualifies for consistency bonus (7+ trainings in 14 days)
+   */
+  checkConsistencyBonus() {
+    const now = Date.now();
+    const fourteenDaysAgo = now - (14 * 24 * 60 * 60 * 1000);
+
+    // Count unique days with training in last 14 days
+    const trainingDays = new Set();
+    AppState.logEntries.forEach(entry => {
+      if (entry.timestamp >= fourteenDaysAgo) {
+        const day = new Date(entry.timestamp).toDateString();
+        trainingDays.add(day);
+      }
+    });
+
+    const daysCount = trainingDays.size;
+    console.log(`Bonuses: ${daysCount} training days in last 14 days`);
+
+    // Activate bonus if 7+ days and not already active
+    if (daysCount >= 7 && !AppState.consistencyBonus.active && AppState.consistencyBonus.ticksRemaining === 0) {
+      AppState.consistencyBonus.active = true;
+      AppState.consistencyBonus.ticksRemaining = 4;
+      AppState.consistencyBonus.lastChecked = now;
+      Storage.save();
+      console.log('Bonuses: Consistency bonus activated! Double XP for 4 ticks');
+      return true;
+    }
+    return false;
+  },
+
+  /**
+   * Apply consistency bonus multiplier if active
+   * @returns {number} Multiplier (2 if active, 1 otherwise)
+   */
+  getConsistencyMultiplier() {
+    if (AppState.consistencyBonus.active && AppState.consistencyBonus.ticksRemaining > 0) {
+      return 2;
+    }
+    return 1;
+  },
+
+  /**
+   * Consume one tick of consistency bonus
+   */
+  consumeConsistencyTick() {
+    if (AppState.consistencyBonus.active && AppState.consistencyBonus.ticksRemaining > 0) {
+      AppState.consistencyBonus.ticksRemaining--;
+      if (AppState.consistencyBonus.ticksRemaining === 0) {
+        AppState.consistencyBonus.active = false;
+      }
+      Storage.save();
+      console.log(`Bonuses: Consistency tick consumed, ${AppState.consistencyBonus.ticksRemaining} remaining`);
+    }
+  },
+
+  /**
+   * Calculate diversity score from training history
+   * @returns {number} Score from 0-100
+   */
+  calculateDiversityScore() {
+    const now = Date.now();
+    const sevenDaysAgo = now - (7 * 24 * 60 * 60 * 1000);
+
+    // Count sets per muscle in last 7 days
+    const muscleSets = {};
+    SKILLS.forEach(s => muscleSets[s.id] = 0);
+
+    AppState.setHistory.forEach(entry => {
+      if (entry.ts >= sevenDaysAgo) {
+        muscleSets[entry.muscleId] = (muscleSets[entry.muscleId] || 0) + 1;
+      }
+    });
+
+    // Calculate diversity (how evenly distributed)
+    const counts = Object.values(muscleSets).filter(c => c > 0);
+    if (counts.length === 0) return 0;
+
+    const total = counts.reduce((a, b) => a + b, 0);
+    const mean = total / 14; // Across all 14 muscles
+    const musclesTrained = counts.length;
+
+    // Score based on number of different muscles trained
+    return Math.min(100, Math.round((musclesTrained / 14) * 100));
+  },
+
+  /**
+   * Check if variation bonus should be awarded (diversity > 70%)
+   */
+  checkVariationBonus() {
+    const diversity = this.calculateDiversityScore();
+    console.log(`Bonuses: Diversity score = ${diversity}%`);
+
+    if (diversity >= 70 && !AppState.variationBonusPending) {
+      AppState.variationBonusPending = true;
+      Storage.save();
+      console.log('Bonuses: Variation bonus available!');
+      return true;
+    }
+    return false;
+  },
+
+  /**
+   * Show popup to claim variation bonus (300 XP to any skill)
+   */
+  showVariationBonusPopup() {
+    if (!AppState.variationBonusPending) return;
+
+    const skillOptions = SKILLS.map(s => `
+      <div class="bonus-skill-option" data-skill-id="${s.id}">
+        <span class="bonus-skill-name">${i18n.skillName(s.id)}</span>
+        <span class="bonus-skill-level">Lv. ${levelFromXp(AppState.skillXp[s.id] || 0)}</span>
+      </div>
+    `).join('');
+
+    const content = document.getElementById('training-flow-content');
+    content.innerHTML = `
+      <div class="bonus-popup">
+        <h3 class="bonus-popup-title">${i18n.t('bonuses.variation_title') || 'Variation Bonus!'}</h3>
+        <p class="bonus-popup-desc">${i18n.t('bonuses.variation_desc') || 'Great muscle variety! Choose a skill to award 300 XP:'}</p>
+        <div class="bonus-skill-list">
+          ${skillOptions}
+        </div>
+      </div>
+    `;
+
+    // Skill selection
+    content.querySelectorAll('.bonus-skill-option').forEach(el => {
+      el.addEventListener('click', () => {
+        const skillId = el.dataset.skillId;
+        this.claimVariationBonus(skillId);
+      });
+    });
+
+    Modal.show('training-modal');
+  },
+
+  /**
+   * Claim the variation bonus for a specific skill
+   */
+  claimVariationBonus(skillId) {
+    const bonusXp = 300;
+
+    // Award XP
+    AppState.skillXp[skillId] = (AppState.skillXp[skillId] || 0) + bonusXp;
+
+    // Log entry
+    const entry = {
+      id: Date.now().toString(),
+      timestamp: Date.now(),
+      skillId: skillId,
+      exerciseId: 'variation_bonus',
+      exerciseName: 'Variation Bonus',
+      weight: 0,
+      reps: 0,
+      xpAwarded: bonusXp,
+      isVariationBonus: true
+    };
+    AppState.logEntries.push(entry);
+
+    // Clear pending bonus
+    AppState.variationBonusPending = false;
+    Storage.save();
+
+    // Show confirmation
+    alert(i18n.t('bonuses.variation_claimed', { xp: bonusXp, skill: i18n.skillName(skillId) }) || `+${bonusXp} XP awarded to ${i18n.skillName(skillId)}!`);
+
+    Modal.hide('training-modal');
+    StatsCard.render();
+  }
+};
+
+// ============================================
 // TRAINING FLOW
 // Single screen with subgroup headers + exercises
 // ============================================
@@ -1594,6 +1782,39 @@ const TrainingFlow = {
       exerciseId: null
     };
     this.showExerciseList();
+  },
+
+  // Start training directly from challenge with specific exercise
+  startFromChallenge(skillId, exerciseId) {
+    console.log('TrainingFlow.startFromChallenge:', skillId, exerciseId);
+
+    const skill = getSkillById(skillId);
+    const exercise = getExerciseById(exerciseId);
+
+    if (!skill || !exercise) {
+      console.error('TrainingFlow: Invalid skill or exercise');
+      return;
+    }
+
+    // Find the subcategory for this exercise
+    let subcategoryId = null;
+    const subcategories = getSubcategoriesBySkill(skillId);
+    for (const sub of subcategories) {
+      const exercises = getExercisesBySubcategory(sub.id);
+      if (exercises.some(e => e.id === exerciseId)) {
+        subcategoryId = sub.id;
+        break;
+      }
+    }
+
+    AppState.training = {
+      skillId: skillId,
+      subcategoryId: subcategoryId,
+      exerciseId: exerciseId
+    };
+
+    // Go directly to exercise detail
+    this.showExerciseDetail();
   },
 
   // New: Single screen with subgroup headers and exercises
@@ -1809,7 +2030,17 @@ const TrainingFlow = {
     const neglected = isSkillNeglected(skillId, AppState.logEntries);
 
     // Calculate XP gain with new formula
-    const xpGained = calculateXpGain(reps, weight, exerciseId, currentLevel, AppState.recentSets, neglected);
+    let xpGained = calculateXpGain(reps, weight, exerciseId, currentLevel, AppState.recentSets, neglected);
+
+    // Apply consistency bonus if active (double XP)
+    const consistencyMultiplier = Bonuses.getConsistencyMultiplier();
+    const baseXp = xpGained;
+    xpGained = Math.round(xpGained * consistencyMultiplier);
+    const isConsistencyBonus = consistencyMultiplier > 1;
+
+    if (isConsistencyBonus) {
+      Bonuses.consumeConsistencyTick();
+    }
 
     // CRITICAL INVARIANT: Every XP tick must:
     // 1. Award XP to exactly one parent muscle skill
@@ -1882,6 +2113,27 @@ const TrainingFlow = {
     // Update challenge progress if active
     if (AppState.challenge) {
       ChallengesScreen.updateProgress(skillId, exerciseId);
+
+      // Track total XP gained during challenge
+      AppState.challenge.xpGained = (AppState.challenge.xpGained || 0) + xpGained;
+
+      // Check if in challenge training mode
+      if (AppState.challengeTraining && AppState.challengeTraining.exerciseId === exerciseId) {
+        AppState.challengeTraining.completedSets++;
+
+        // Check if target sets reached for this exercise
+        if (AppState.challengeTraining.completedSets >= AppState.challengeTraining.targetSets) {
+          // Clear challenge training state
+          AppState.challengeTraining = null;
+
+          // Save and close modal, return to challenges
+          Storage.save();
+          Modal.hide('training-modal');
+          Navigation.goTo('challenges-screen');
+          ChallengesScreen.render();
+          return;
+        }
+      }
     }
 
     // Save to localStorage
@@ -2093,8 +2345,12 @@ const ChallengesScreen = {
         totalSets += ex.targetSets;
         completedSets += ex.completedSets;
         const done = ex.completedSets >= ex.targetSets;
+        const remaining = ex.targetSets - ex.completedSets;
         exercisesHtml += `
-          <div class="challenge-exercise ${done ? 'completed' : ''}">
+          <div class="challenge-exercise ${done ? 'completed' : 'clickable'}"
+               data-skill-id="${muscle.skillId}"
+               data-exercise-id="${ex.exerciseId}"
+               data-remaining="${remaining}">
             <span class="challenge-exercise-name">${ex.exerciseName}</span>
             <span class="challenge-exercise-progress">${ex.completedSets}/${ex.targetSets}</span>
           </div>
@@ -2135,6 +2391,26 @@ const ChallengesScreen = {
       </div>
     `;
 
+    // Click handlers for exercises - start training flow
+    container.querySelectorAll('.challenge-exercise.clickable').forEach(el => {
+      el.addEventListener('click', () => {
+        const skillId = el.dataset.skillId;
+        const exerciseId = el.dataset.exerciseId;
+        const remaining = parseInt(el.dataset.remaining);
+
+        // Store context for challenge mode
+        AppState.challengeTraining = {
+          skillId,
+          exerciseId,
+          targetSets: remaining,
+          completedSets: 0
+        };
+
+        // Start training flow with the specific exercise
+        TrainingFlow.startFromChallenge(skillId, exerciseId);
+      });
+    });
+
     // Abandon button
     container.querySelector('#abandon-challenge')?.addEventListener('click', () => {
       if (confirm(i18n.t('challenges.abandon_confirm'))) {
@@ -2144,11 +2420,39 @@ const ChallengesScreen = {
       }
     });
 
-    // Complete button
+    // Complete button - calculate and award bonus XP
     container.querySelector('#complete-challenge')?.addEventListener('click', () => {
+      const totalXpGained = AppState.challenge.xpGained || 0;
+      const bonusXp = Math.round(totalXpGained * 0.333);
+
+      // Pick a random muscle from the challenge
+      const muscles = AppState.challenge.muscles;
+      const randomMuscle = muscles[Math.floor(Math.random() * muscles.length)];
+      const bonusSkillId = randomMuscle.skillId;
+
+      // Award bonus XP
+      if (bonusXp > 0) {
+        AppState.skillXp[bonusSkillId] = (AppState.skillXp[bonusSkillId] || 0) + bonusXp;
+
+        // Add bonus log entry
+        const bonusEntry = {
+          id: Date.now().toString(),
+          timestamp: Date.now(),
+          skillId: bonusSkillId,
+          exerciseId: 'challenge_bonus',
+          exerciseName: 'Challenge Bonus',
+          weight: 0,
+          reps: 0,
+          xpAwarded: bonusXp,
+          isChallengeBonus: true
+        };
+        AppState.logEntries.push(bonusEntry);
+      }
+
       AppState.challenge.completed = true;
       Storage.save();
-      alert(i18n.t('challenges.completed_msg'));
+
+      alert(i18n.t('challenges.completed_msg', { bonus: bonusXp }));
       AppState.challenge = null;
       Storage.save();
       this.render();
@@ -4483,6 +4787,17 @@ document.addEventListener('DOMContentLoaded', () => {
   setTimeout(() => {
     OnboardingAnimations.init();
   }, 1500);
+
+  // Check for bonuses (consistency and variation)
+  setTimeout(() => {
+    Bonuses.checkConsistencyBonus();
+    Bonuses.checkVariationBonus();
+
+    // Show variation bonus popup if pending
+    if (AppState.variationBonusPending) {
+      Bonuses.showVariationBonusPopup();
+    }
+  }, 2000);
 
   // Check if there's an in-progress plan run to resume
   if (AppState.planRun && AppState.planRun.active) {

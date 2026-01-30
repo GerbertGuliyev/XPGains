@@ -2874,8 +2874,13 @@ body {
   transition: border-color 0.2s ease;
 }
 
-.challenge-exercise:hover {
-  border-color: var(--border-medium);
+.challenge-exercise.clickable {
+  cursor: pointer;
+}
+
+.challenge-exercise.clickable:hover {
+  border-color: var(--accent-gold);
+  background: var(--bg-tile-hover);
 }
 
 .challenge-exercise.completed {
@@ -3537,4 +3542,66 @@ body {
   height: 100%;
   pointer-events: none;
   z-index: 3;
+}
+
+/* ============================================
+   BONUS POPUP STYLES
+   ============================================ */
+.bonus-popup {
+  text-align: center;
+  padding: var(--spacing-md);
+}
+
+.bonus-popup-title {
+  color: var(--accent-gold);
+  font-size: 24px;
+  margin-bottom: var(--spacing-md);
+}
+
+.bonus-popup-desc {
+  color: var(--text-secondary);
+  margin-bottom: var(--spacing-lg);
+}
+
+.bonus-skill-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.bonus-skill-option {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-md);
+  background: var(--bg-tile);
+  border: 2px solid var(--border-medium);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.bonus-skill-option:hover {
+  border-color: var(--accent-gold);
+  background: var(--bg-tile-hover);
+}
+
+.bonus-skill-name {
+  color: var(--text-light);
+  font-weight: 600;
+}
+
+.bonus-skill-level {
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+[data-theme="alt"] .bonus-popup-title {
+  color: var(--accent-gold);
+}
+
+[data-theme="alt"] .bonus-skill-option:hover {
+  border-color: var(--accent-gold);
 }
