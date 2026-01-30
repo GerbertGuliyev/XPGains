@@ -63,7 +63,7 @@ export function completeWorkout(
       id: e.id,
       timestamp: new Date(e.createdAt).getTime(),
       skillId: e.skillId,
-      exerciseId: e.sourceSessionId,
+      exerciseId: (e.meta as { exerciseId?: string })?.exerciseId || '',
       weight: 0,
       reps: 0,
       xpAwarded: e.amount,
@@ -71,7 +71,12 @@ export function completeWorkout(
 
   for (const exerciseInput of input.exercises) {
     const exercise = getExerciseById(exerciseInput.exerciseId);
-    if (!exercise) continue;
+    if (!exercise) {
+      // Skip invalid exercises in batch processing (data corruption recovery)
+      // Unlike completeSet(), we don't throw here since we're processing multiple exercises
+      console.warn(`Skipping unknown exercise: ${exerciseInput.exerciseId}`);
+      continue;
+    }
 
     const skillId = exercise.skillId as SkillId;
     const skillXp = state.stats.skillXp[skillId] || 0;
@@ -244,7 +249,7 @@ export function completeSet(
       id: e.id,
       timestamp: new Date(e.createdAt).getTime(),
       skillId: e.skillId,
-      exerciseId: '',
+      exerciseId: (e.meta as { exerciseId?: string })?.exerciseId || '',
       weight: 0,
       reps: 0,
       xpAwarded: e.amount,

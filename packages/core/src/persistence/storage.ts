@@ -151,20 +151,29 @@ export class StateStorage {
 
   /**
    * Import state from JSON string (for restore)
+   * @throws Error if JSON is invalid or state format is invalid
    */
   async importState(json: string): Promise<GameState> {
-    const parsed = JSON.parse(json);
+    let parsed: Record<string, unknown>;
+
+    try {
+      parsed = JSON.parse(json);
+    } catch (error) {
+      throw new Error(
+        `Invalid JSON format: ${error instanceof Error ? error.message : 'parse error'}`
+      );
+    }
 
     // Validate basic structure
     if (!parsed.schemaVersion || !parsed.profile || !parsed.stats) {
-      throw new Error('Invalid state format');
+      throw new Error('Invalid state format: missing required fields (schemaVersion, profile, or stats)');
     }
 
     // Migrate if necessary
     const migrated =
       parsed.schemaVersion !== CURRENT_SCHEMA_VERSION
         ? migrateState(parsed)
-        : (parsed as GameState);
+        : (parsed as unknown as GameState);
 
     await this.saveState(migrated, true);
     return migrated;

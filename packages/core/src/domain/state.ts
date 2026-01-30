@@ -15,7 +15,7 @@ import type {
   Challenge,
   EquipmentId,
 } from '../types';
-import { createInitialSkillXp, SKILL_IDS } from '../data';
+import { createInitialSkillXp, SKILL_IDS, XP_TABLE } from '../data';
 import { levelFromXp } from './levels';
 
 /**
@@ -433,9 +433,7 @@ export function calibrateSkills(
 
   for (const [skillId, targetLevel] of Object.entries(skillLevels)) {
     if (targetLevel && targetLevel >= 1 && targetLevel <= 99) {
-      // Calculate XP needed for this level
-      // We use the XP table to get the cumulative XP
-      const { XP_TABLE } = require('../data/xpConfig');
+      // Calculate XP needed for this level using the pre-computed XP table
       skillXp[skillId as SkillId] = XP_TABLE[targetLevel] || 0;
     }
   }

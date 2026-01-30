@@ -3,9 +3,9 @@
  * Handles schema version upgrades for persisted state
  */
 
-import type { GameState, SkillId } from '../types';
+import type { GameState, SkillId, EquipmentId } from '../types';
 import { CURRENT_SCHEMA_VERSION, createInitialState } from '../domain';
-import { createInitialSkillXp, SKILL_IDS } from '../data';
+import { createInitialSkillXp, SKILL_IDS, EQUIPMENT_IDS, isValidEquipmentId } from '../data';
 
 /**
  * Migration function type
@@ -42,7 +42,7 @@ export function migrateState(state: unknown): GameState {
   }
 
   // Validate and ensure all required fields exist
-  return validateAndNormalize(currentState as GameState);
+  return validateAndNormalize(currentState as unknown as GameState);
 }
 
 /**
@@ -113,13 +113,16 @@ function migrateV0ToV1(state: unknown): Record<string, unknown> {
 
   // Extract equipment settings
   let equipmentEnabled = false;
-  let equipmentAvailable: string[] = [];
+  let equipmentAvailable: EquipmentId[] = [];
 
   if (legacy.equipmentMode === '1' || legacy.equipment_mode === '1') {
     equipmentEnabled = true;
   }
   if (Array.isArray(legacy.equipment)) {
-    equipmentAvailable = legacy.equipment as string[];
+    // Validate and filter to only include valid equipment IDs
+    equipmentAvailable = (legacy.equipment as string[]).filter(
+      (id): id is EquipmentId => isValidEquipmentId(id)
+    );
   }
 
   // Build v1 state
@@ -160,7 +163,7 @@ function migrateV0ToV1(state: unknown): Record<string, unknown> {
 
     equipment: {
       enabled: equipmentEnabled,
-      available: equipmentAvailable as SkillId[],
+      available: equipmentAvailable,
     },
 
     meta: {

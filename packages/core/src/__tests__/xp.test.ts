@@ -194,7 +194,11 @@ describe('XP Calculation', () => {
       const spillover50 = getSpilloverXp('bench_press', 50);
       const spillover100 = getSpilloverXp('bench_press', 100);
 
-      expect(spillover100[0].xp).toBe(spillover50[0].xp * 2);
+      // 50 * 0.15 = 7.5 -> rounds to 8
+      // 100 * 0.15 = 15
+      // Due to rounding, exact 2x relationship may not hold
+      expect(spillover50[0].xp).toBe(8); // Math.round(50 * 0.15)
+      expect(spillover100[0].xp).toBe(15); // Math.round(100 * 0.15)
     });
 
     it('rounds spillover XP', () => {
