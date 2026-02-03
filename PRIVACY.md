@@ -1,6 +1,6 @@
 # Privacy Policy for XPGains
 
-**Last Updated: January 31, 2026**
+**Last Updated: February 3, 2026**
 
 ## Overview
 
@@ -73,8 +73,8 @@ We may update this Privacy Policy from time to time. Changes will be reflected w
 
 If you have questions about this Privacy Policy, please contact:
 
-**Developer**: Gerbert Guliyev  
-**GitHub**: https://github.com/gerbertguliyev/XPGains-1.0
+Gerbert Guliyev  
+E-Mail: gerbertsteam@gmail.com
 
 ---
 
