@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XPGains - Gym Tracker | Support</title>
+    <meta name="description" content="Support page for XPGains - Gym Tracker, the gamified fitness app that turns your workouts into levelable skills.">
+    <style>
+        :root {
+            --bg-primary: #1A1A1A;
+            --bg-card: #252525;
+            --bg-input: #3d3a2f;
+            --accent: #d4a544;
+            --accent-bright: #f5a623;
+            --accent-hover: #e6b85a;
+            --text-primary: #f5f5f5;
+            --text-secondary: #9a9a9a;
+            --text-muted: #6a6a6a;
+            --border: #4a4535;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+        }
+
+        header {
+            text-align: center;
+            padding: 2rem 0 3rem;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 2rem;
+        }
+
+        .logo {
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 1.5rem;
+            border-radius: 22px;
+            overflow: hidden;
+        }
+
+        .logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        h1 {
+            font-size: 2.2rem;
+            margin-bottom: 0.5rem;
+            color: var(--accent-bright);
+        }
+
+        .tagline {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            margin-top: 0.5rem;
+        }
+
+        section {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 1.75rem;
+            margin-bottom: 1.5rem;
+            border: 1px solid var(--border);
+        }
+
+        h2 {
+            color: var(--accent-bright);
+            font-size: 1.4rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        p {
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+        }
+
+        p:last-child {
+            margin-bottom: 0;
+        }
+
+        .contact-btn {
+            display: inline-block;
+            background: var(--accent);
+            color: var(--bg-primary);
+            padding: 0.875rem 2rem;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: background 0.2s, transform 0.2s;
+        }
+
+        .contact-btn:hover {
+            background: var(--accent-hover);
+            transform: translateY(-2px);
+        }
+
+        .feature-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .feature {
+            background: var(--bg-input);
+            padding: 1rem;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+        }
+
+        .feature-title {
+            color: var(--text-primary);
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .feature-desc {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin: 0;
+        }
+
+        .faq-item {
+            border-bottom: 1px solid var(--border);
+            padding: 1rem 0;
+        }
+
+        .faq-item:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .faq-item:first-child {
+            padding-top: 0;
+        }
+
+        .faq-question {
+            color: var(--text-primary);
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .faq-answer {
+            color: var(--text-secondary);
+            margin: 0;
+        }
+
+        .highlight-box {
+            background: var(--bg-input);
+            border-left: 3px solid var(--accent);
+            padding: 1rem 1.25rem;
+            border-radius: 0 8px 8px 0;
+            margin: 1rem 0;
+        }
+
+        .highlight-box p {
+            margin: 0;
+            color: var(--text-secondary);
+        }
+
+        footer {
+            text-align: center;
+            padding: 2rem 0;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            border-top: 1px solid var(--border);
+            margin-top: 1rem;
+        }
+
+        footer a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 1.5rem 1rem;
+            }
+
+            h1 {
+                font-size: 1.8rem;
+            }
+
+            section {
+                padding: 1.25rem;
+            }
+
+            .feature-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <img src="icon-180.png" alt="XPGains Logo">
+            </div>
+            <h1>XPGains - Gym Tracker</h1>
+            <p class="tagline">Earn XP from your workouts and level up</p>
+        </header>
+
+        <section>
+            <h2>About XPGains</h2>
+            <p>XPGains is a gamified gym tracker that rewards your consistency. Track your workouts and watch your progress as 14 muscle groups level up from 1 to 99 based on your training volume.</p>
+            <p>Every set you log earns XP calculated from weight lifted, reps performed, and exercise type. The more you train, the higher your levels climb—giving you a clear, motivating way to see your fitness journey unfold.</p>
+        </section>
+
+        <section>
+            <h2>Features</h2>
+            <div class="feature-grid">
+                <div class="feature">
+                    <div class="feature-title">14 Muscle Skills</div>
+                    <p class="feature-desc">Level up chest, delts, biceps, triceps, forearms, traps, neck, lats, erectors, glutes, quads, hamstrings, calves, and core</p>
+                </div>
+                <div class="feature">
+                    <div class="feature-title">Interactive Muscle Map</div>
+                    <p class="feature-desc">Tap on body regions to select muscles and log your exercises</p>
+                </div>
+                <div class="feature">
+                    <div class="feature-title">Workout Challenges</div>
+                    <p class="feature-desc">Take on Short, Regular, or Ironman challenges for bonus XP</p>
+                </div>
+                <div class="feature">
+                    <div class="feature-title">Training Plans</div>
+                    <p class="feature-desc">Create custom workout plans and follow guided sessions</p>
+                </div>
+                <div class="feature">
+                    <div class="feature-title">Custom Exercises</div>
+                    <p class="feature-desc">Add your own exercises with custom XP values</p>
+                </div>
+                <div class="feature">
+                    <div class="feature-title">Equipment Filtering</div>
+                    <p class="feature-desc">Show only exercises matching your available gym equipment</p>
+                </div>
+                <div class="feature">
+                    <div class="feature-title">Friends & Leaderboards</div>
+                    <p class="feature-desc">Share your stats and compare progress with friends</p>
+                </div>
+                <div class="feature">
+                    <div class="feature-title">6 Languages</div>
+                    <p class="feature-desc">English, German, French, Spanish, Italian, and Russian</p>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <h2>Frequently Asked Questions</h2>
+            
+            <div class="faq-item">
+                <p class="faq-question">How is XP calculated?</p>
+                <p class="faq-answer">XP is calculated based on the weight you lift, the number of reps you perform, and the type of exercise. Compound exercises award more base XP than isolation exercises. Additional bonuses apply for training neglected muscles, maintaining consistency, and varying your routine.</p>
+            </div>
+
+            <div class="faq-item">
+                <p class="faq-question">What is the maximum level?</p>
+                <p class="faq-answer">Each of the 14 muscle skills can be leveled from 1 to 99, giving a maximum Total Level of 1,386. The XP curve is designed for long-term progression—reaching level 99 in a single skill takes years of dedicated training.</p>
+            </div>
+
+            <div class="faq-item">
+                <p class="faq-question">Is my data saved if I delete the app?</p>
+                <p class="faq-answer">Your workout data is stored locally on your device. If you use the Share Stats feature, your stats are also saved to our cloud database. We recommend sharing your stats regularly to maintain a backup.</p>
+            </div>
+
+            <div class="faq-item">
+                <p class="faq-question">Can I use XPGains offline?</p>
+                <p class="faq-answer">Yes! All core features work offline. Your workouts are saved locally on your device. The Friends feature requires an internet connection to sync with other users.</p>
+            </div>
+
+            <div class="faq-item">
+                <p class="faq-question">How do I change the language or theme?</p>
+                <p class="faq-answer">Go to the Settings tab to change your language (6 available) or switch between Classic and Mithril themes.</p>
+            </div>
+
+            <div class="faq-item">
+                <p class="faq-question">What is Spillover XP?</p>
+                <p class="faq-answer">Compound exercises work multiple muscle groups. XPGains automatically awards a percentage of your XP to secondary muscles. For example, Bench Press gives bonus XP to Triceps and Delts in addition to your Chest XP.</p>
+            </div>
+
+            <div class="faq-item">
+                <p class="faq-question">Can I import my existing workout data?</p>
+                <p class="faq-answer">Yes! Use the Calibrate Skills feature in Settings to manually set your skill levels if you're switching from another fitness tracker or want to account for your training history.</p>
+            </div>
+        </section>
+
+        <section>
+            <h2>Contact Support</h2>
+            <p>Have a question, found a bug, or want to suggest a feature? We'd love to hear from you.</p>
+            <div class="highlight-box" style="margin-top: 1.25rem;">
+                <p><strong>Email:</strong> gerbertsteam@gmail.com</p>
+            </div>
+        </section>
+
+        <section>
+            <h2>Privacy</h2>
+            <p>XPGains stores your workout data locally on your device. When you use the Friends feature, only your display name, skill levels, and total level are shared with the cloud. We do not collect personal information, track your location, or share data with third parties.</p>
+            <p>For complete details, see our <a href="https://github.com/GerbertGuliyev/XPGains/blob/main/PRIVACY.md" style="color: var(--accent);">Privacy Policy</a>.</p>
+        </section>
+
+        <footer>
+            <p>© 2026 Gerbert Guliyev. All rights reserved.</p>
+            <p style="margin-top: 0.5rem;">
